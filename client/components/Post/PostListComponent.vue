@@ -25,6 +25,7 @@ async function getPosts(author?: string) {
   }
   searchAuthor.value = author ? author : "";
   posts.value = postResults;
+  console.log(posts.value);
 }
 
 function updateEditing(id: string) {

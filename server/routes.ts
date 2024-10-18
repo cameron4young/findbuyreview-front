@@ -2,7 +2,8 @@ import { ObjectId } from "mongodb";
 
 import { Router, getExpressRouter } from "./framework/router";
 
-import { Authing, Friending, Posting, Sessioning } from "./app";
+import { Authing, Friending, Labeling, Messages, Posting, Preferences, Saving, Sessioning } from "./app";
+import { Offer } from "./concepts/messages";
 import { PostOptions } from "./concepts/posting";
 import { SessionDoc } from "./concepts/sessioning";
 import Responses from "./responses";
@@ -84,18 +85,18 @@ class Routes {
   }
 
   @Router.post("/posts")
-  async createPost(session: SessionDoc, content: string, options?: PostOptions) {
+  async createPost(session: SessionDoc, content: string, video: string, productURL: string, rating: number, options?: PostOptions) {
     const user = Sessioning.getUser(session);
-    const created = await Posting.create(user, content, options);
+    const created = await Posting.create(user, content, video, productURL, rating, options);
     return { msg: created.msg, post: await Responses.post(created.post) };
   }
 
   @Router.patch("/posts/:id")
-  async updatePost(session: SessionDoc, id: string, content?: string, options?: PostOptions) {
+  async updatePost(session: SessionDoc, id: string, content?: string, rating?: number, productURL?: string, options?: PostOptions) {
     const user = Sessioning.getUser(session);
     const oid = new ObjectId(id);
     await Posting.assertAuthorIsUser(oid, user);
-    return await Posting.update(oid, content, options);
+    return await Posting.update(oid, content, rating, productURL, options);
   }
 
   @Router.delete("/posts/:id")
@@ -151,6 +152,202 @@ class Routes {
     const user = Sessioning.getUser(session);
     const fromOid = (await Authing.getUserByUsername(from))._id;
     return await Friending.rejectRequest(fromOid, user);
+  }
+
+  @Router.post("/collection")
+  async createCollection(session: SessionDoc, collectionName: string) {
+    const user = Sessioning.getUser(session);
+    const saved = await Saving.createCollection(user, collectionName);
+    return { msg: saved.msg, collection: saved.collection };
+  }
+
+  @Router.delete("/collection")
+  async deleteCollection(session: SessionDoc, collectionName: string) {
+    const user = Sessioning.getUser(session);
+    const collectionId = await Saving.getCollectionByName(user, collectionName);
+    if (collectionId != null) {
+      const saved = await Saving.deleteCollection(user, collectionId);
+      return { msg: saved.msg };
+    }
+    return { msg: "Could not find Collection" };
+  }
+
+  @Router.get("/collection")
+  async getCollections(session: SessionDoc) {
+    const collections = await Saving.getAllCollectionNames();
+    return { collections: collections };
+  }
+  @Router.get("/collections/user/:userId")
+  async getCollectionsByUser(session: SessionDoc, userId: string) {
+    const userObjectId = new ObjectId(userId);
+    const collections = await Saving.getCollectionsByUser(userObjectId);
+    return { msg: "Collections fetched successfully", collections };
+  }
+
+  @Router.get("/collection/:collectionName")
+  async getCollection(session: SessionDoc, collectionName: string) {
+    const user = Sessioning.getUser(session);
+    const id = await Saving.getCollectionByName(user, collectionName);
+    if (id == null) {
+      return { msg: "Could not find collection name" };
+    }
+    const posts = await Saving.getPostsInCollection(user, id);
+    return { posts: posts };
+  }
+
+  @Router.post("/save")
+  async savePostToCollection(session: SessionDoc, collectionName: string, id: string) {
+    const user = Sessioning.getUser(session);
+    const collectionId = await Saving.getCollectionByName(user, collectionName);
+    const oid = new ObjectId(id);
+    if (collectionId != null) {
+      const saved = await Saving.savePostToCollection(user, collectionId, oid);
+      return { msg: saved.msg };
+    }
+    return { msg: "Could not find Collection" };
+  }
+
+  @Router.delete("/save")
+  async removePostFromCollection(session: SessionDoc, collectionName: string, id: string) {
+    const user = Sessioning.getUser(session);
+    const collectionId = await Saving.getCollectionByName(user, collectionName);
+    const oid = new ObjectId(id);
+    if (collectionId != null) {
+      const saved = await Saving.removePostFromCollection(user, collectionId, oid);
+      return { msg: saved.msg };
+    }
+    return { msg: "Could not find Collection" };
+  }
+
+  @Router.post("/label")
+  async addLabelToPost(session: SessionDoc, postId: string, label: string) {
+    const oid = new ObjectId(postId);
+    const response = await Labeling.addLabelToPost(label, oid);
+    return { msg: response.msg };
+  }
+
+  @Router.delete("/label")
+  async removeLabelFromPost(session: SessionDoc, postId: string, label: string) {
+    const oid = new ObjectId(postId);
+    const response = await Labeling.removeLabelFromPost(label, oid);
+    return { msg: response.msg };
+  }
+
+  @Router.get("/label/:label")
+  async getPostsByLabel(session: SessionDoc, label: string) {
+    const user = Sessioning.getUser(session);
+    const posts = await Labeling.getPostsByLabel(label);
+    return { posts };
+  }
+
+  @Router.post("/preferences")
+  async createUserProfile(userId: ObjectId) {
+    const profile = await Preferences.createUserPreferenceDoc(userId);
+    return { msg: profile };
+  }
+
+  @Router.post("/preferences/interests")
+  async addInterest(session: SessionDoc, interest: string) {
+    const user = Sessioning.getUser(session);
+    console.log(user);
+    await Preferences.addInterest(user, interest);
+    return { msg: `Interest ${interest} added for user ${user}` };
+  }
+
+  @Router.post("/preferences/favorite-companies")
+  async addFavoriteCompany(session: SessionDoc, company: string) {
+    const user = Sessioning.getUser(session);
+    await Preferences.addFavoriteCompany(user, company);
+    return { msg: `Favorite company ${company} added for user ${user}` };
+  }
+
+  @Router.post("/preferences/blocked")
+  async blockContent(session: SessionDoc, block: string) {
+    const user = Sessioning.getUser(session);
+    await Preferences.blockContent(user, block);
+    return { msg: `Content ${block} blocked for user ${user}` };
+  }
+
+  @Router.patch("/preferences/location")
+  async updateLocation(session: SessionDoc, newLocation: string) {
+    const user = Sessioning.getUser(session);
+    await Preferences.updateLocation(user, newLocation);
+    return { msg: `Location updated to ${newLocation} for user ${user}` };
+  }
+
+  @Router.patch("/preferences/age")
+  async updateAge(session: SessionDoc, newAge: number) {
+    const user = Sessioning.getUser(session);
+    await Preferences.updateAge(user, newAge);
+    return { msg: `Age updated to ${newAge} for user ${user}` };
+  }
+
+  @Router.patch("/preferences/looking-for")
+  async updateLookingFor(session: SessionDoc, newLookingFor: string) {
+    const user = Sessioning.getUser(session);
+    await Preferences.updateLookingFor(user, newLookingFor);
+    return { msg: `Looking-for status updated to ${newLookingFor} for user ${user}` };
+  }
+
+  @Router.get("/preferences")
+  async getPreferences(session: SessionDoc) {
+    const user = Sessioning.getUser(session);
+    const preferences = await Preferences.getPreferences(user);
+    return { preferences };
+  }
+
+  @Router.post("/conversations")
+  async createConversation(session: SessionDoc, recipientId: string) {
+    const senderId = Sessioning.getUser(session);
+    const response = await Messages.createConversation(senderId, new ObjectId(recipientId));
+    return { msg: response.msg, conversationId: response.conversationId };
+  }
+
+  @Router.get("/conversations")
+  async getConversationBySenderAndRecipient(session: SessionDoc, recipientId: string) {
+    const senderId = Sessioning.getUser(session);
+    const conversation = await Messages.getConversationBySenderAndRecipient(senderId, new ObjectId(recipientId));
+    return { conversation };
+  }
+
+  @Router.get("/conversations/:conversationId/messages")
+  async getMessages(session: SessionDoc, conversationId: string) {
+    const messages = await Messages.getMessages(new ObjectId(conversationId));
+    return { messages };
+  }
+
+  @Router.post("/conversations/:conversationId/messages")
+  async sendMessage(session: SessionDoc, conversationId: string, content: string, offer: Offer) {
+    const response = await Messages.sendMessage(new ObjectId(conversationId), content, offer);
+    return { msg: response.msg, messageId: response.messageId };
+  }
+
+  @Router.post("/conversations/:conversationId/messages/:messageId/response")
+  async addResponseToOffer(session: SessionDoc, conversationId: string, messageId: string, postId: string, response: string) {
+    const resp = await Messages.addResponseToOffer(new ObjectId(conversationId), new ObjectId(messageId), new ObjectId(postId), response);
+    return { msg: resp.msg };
+  }
+
+  @Router.post("/conversations/:conversationId/messages/:messageId/approve")
+  async approveOffer(session: SessionDoc, conversationId: string, messageId: string) {
+    const senderId = Sessioning.getUser(session);
+    const resp = await Messages.approveOffer(new ObjectId(conversationId), new ObjectId(messageId), senderId);
+    return { msg: resp.msg };
+  }
+
+  @Router.delete("/conversations/:conversationId/messages/:messageId")
+  async deleteMessage(session: SessionDoc, conversationId: string, messageId: string) {
+    const response = await Messages.deleteMessage(new ObjectId(conversationId), new ObjectId(messageId));
+    return { msg: response.msg };
+  }
+
+  @Router.post("/promotions")
+  async createPromotion(session: SessionDoc, postId: string, duration: number) {
+    const oid = new ObjectId(postId);
+    const expirationDate = new Date();
+    expirationDate.setDate(expirationDate.getDate() + duration);
+    const response = await Labeling.addLabelToPost("promoted", oid, expirationDate);
+    return { msg: response.msg };
   }
 }
 

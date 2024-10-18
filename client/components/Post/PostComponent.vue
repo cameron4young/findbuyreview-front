@@ -16,6 +16,7 @@ const deletePost = async () => {
   }
   emit("refreshPosts");
 };
+console.log(props.post[0], "props");
 </script>
 
 <template>
