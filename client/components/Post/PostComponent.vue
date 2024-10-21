@@ -16,32 +16,51 @@ const deletePost = async () => {
   }
   emit("refreshPosts");
 };
-console.log(props.post[0], "props");
+
+
+
 </script>
 
 <template>
-  <p class="author">{{ props.post.author }}</p>
-  <p>{{ props.post.content }}</p>
-  <div class="base">
-    <menu v-if="props.post.author == currentUsername">
-      <li><button class="btn-small pure-button" @click="emit('editPost', props.post._id)">Edit</button></li>
-      <li><button class="button-error btn-small pure-button" @click="deletePost">Delete</button></li>
-    </menu>
-    <article class="timestamp">
-      <p v-if="props.post.dateCreated !== props.post.dateUpdated">Edited on: {{ formatDate(props.post.dateUpdated) }}</p>
-      <p v-else>Created on: {{ formatDate(props.post.dateCreated) }}</p>
-    </article>
+  <div class="post-container">
+    <p class="author">{{ props.post.author }}</p>
+    <p>{{ props.post.content }}</p>
+    <div v-if="props.post.video" class="video-container">
+      <iframe 
+        :src=props.post.video
+        width="560" 
+        height="315" 
+        title="YouTube video player" 
+        frameborder="0" 
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+        allowfullscreen>
+      </iframe>
+    </div>
+    <div class="base">
+      <menu v-if="props.post.author == currentUsername">
+        <li><button class="btn-small pure-button" @click="emit('editPost', props.post._id)">Edit</button></li>
+        <li><button class="button-error btn-small pure-button" @click="deletePost">Delete</button></li>
+      </menu>
+      <article class="timestamp">
+        <p v-if="props.post.dateCreated !== props.post.dateUpdated">Edited on: {{ formatDate(props.post.dateUpdated) }}</p>
+        <p v-else>Created on: {{ formatDate(props.post.dateCreated) }}</p>
+      </article>
+    </div>
   </div>
 </template>
 
 <style scoped>
-p {
-  margin: 0em;
+.post-container {
+  margin-bottom: 2em;
 }
 
 .author {
   font-weight: bold;
   font-size: 1.2em;
+}
+
+.video-container {
+  margin: 1em 0;
 }
 
 menu {

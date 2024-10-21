@@ -241,24 +241,41 @@ class Routes {
   }
 
   @Router.post("/preferences")
-  async createUserProfile(userId: ObjectId) {
-    const profile = await Preferences.createUserPreferenceDoc(userId);
+  async createUserProfile(session: SessionDoc) {
+    const user = Sessioning.getUser(session);
+    const profile = await Preferences.createUserPreferenceDoc(user);
     return { msg: profile };
   }
 
-  @Router.post("/preferences/interests")
-  async addInterest(session: SessionDoc, interest: string) {
+  // @Router.post("/preferences/interests")
+  // async addInterest(session: SessionDoc, interest: string) {
+  //   console.log(interest);
+  //   const user = Sessioning.getUser(session);
+  //   await Preferences.addInterest(user, interest);
+  //   return { msg: `Interest ${interest} added for user ${user}` };
+  // }
+
+  // @Router.post("/preferences/favorite-companies")
+  // async addFavoriteCompany(session: SessionDoc, company: string) {
+  //   const user = Sessioning.getUser(session);
+  //   await Preferences.addFavoriteCompany(user, company);
+  //   return { msg: `Favorite company ${company} added for user ${user}` };
+  // }
+
+  @Router.patch("/preferences/interests")
+  async updateInterests(session: SessionDoc, newInterests: string[]) {
     const user = Sessioning.getUser(session);
-    console.log(user);
-    await Preferences.addInterest(user, interest);
-    return { msg: `Interest ${interest} added for user ${user}` };
+    console.log(newInterests);
+    await Preferences.updateInterests(user, newInterests);
+    return { msg: `Interests updated for user ${user}` };
   }
 
-  @Router.post("/preferences/favorite-companies")
-  async addFavoriteCompany(session: SessionDoc, company: string) {
+  @Router.patch("/preferences/favorite-companies")
+  async updateFavoriteCompanies(session: SessionDoc, newFavoriteCompanies: string[]) {
+    console.log(newFavoriteCompanies);
     const user = Sessioning.getUser(session);
-    await Preferences.addFavoriteCompany(user, company);
-    return { msg: `Favorite company ${company} added for user ${user}` };
+    await Preferences.updateFavoriteCompanies(user, newFavoriteCompanies);
+    return { msg: `Favorite companies updated for user ${user}` };
   }
 
   @Router.post("/preferences/blocked")
@@ -266,6 +283,14 @@ class Routes {
     const user = Sessioning.getUser(session);
     await Preferences.blockContent(user, block);
     return { msg: `Content ${block} blocked for user ${user}` };
+  }
+
+  @Router.patch("/preferences/do-not-show")
+  async updateDoNotShow(session: SessionDoc, newDoNotShowList: string[]) {
+    console.log(newDoNotShowList);
+    const user = Sessioning.getUser(session);
+    await Preferences.updateDoNotShow(user, newDoNotShowList);
+    return { msg: `Do Not Show list updated for user ${user}` };
   }
 
   @Router.patch("/preferences/location")

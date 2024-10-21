@@ -18,23 +18,18 @@ export interface PostDoc extends BaseDoc {
 }
 
 /**
- * concept: Posting [Author]
+ * concept: Posting
  */
 export default class PostingConcept {
   public readonly posts: DocCollection<PostDoc>;
 
-  /**
-   * Make an instance of Posting.
-   */
   constructor(collectionName: string) {
     this.posts = new DocCollection<PostDoc>(collectionName);
   }
 
   async create(author: ObjectId, content: string, video: string, productURL: string, rating: number, options?: PostOptions) {
-    // Current date
     const date = new Date();
 
-    // Create the post
     const _id = await this.posts.createOne({
       author,
       content,
@@ -45,12 +40,10 @@ export default class PostingConcept {
       options,
     });
 
-    // Return a success message along with the created post
     return { msg: "Post successfully created!", post: await this.posts.readOne({ _id }) };
   }
 
   async getPosts() {
-    // Returns all posts! You might want to page for better client performance
     return await this.posts.readMany({}, { sort: { _id: -1 } });
   }
 
@@ -59,8 +52,6 @@ export default class PostingConcept {
   }
 
   async update(_id: ObjectId, content?: string, rating?: number, productURL?: string, options?: PostOptions) {
-    // Note that if content or options is undefined, those fields will *not* be updated
-    // since undefined values for partialUpdateOne are ignored.
     await this.posts.partialUpdateOne({ _id }, { content, rating, productURL, options });
     return { msg: "Post successfully updated!" };
   }

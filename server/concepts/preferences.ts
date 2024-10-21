@@ -3,12 +3,12 @@ import DocCollection, { BaseDoc } from "../framework/doc";
 
 export interface UserPreferenceDoc extends BaseDoc {
   userId: ObjectId;
-  interests: String[];
+  interests: string[];
   age: number;
   location: string;
   lookingFor: string;
-  favoriteCompanies: String[];
-  doNotShow: String[];
+  favoriteCompanies: string[];
+  doNotShow: string[];
 }
 
 export default class PreferencesConcept {
@@ -20,15 +20,14 @@ export default class PreferencesConcept {
 
   async createUserPreferenceDoc(
     userId: ObjectId,
-    interests: String[] = [],
+    interests: string[] = [],
     age: number = -1,
     location: string = "",
     lookingFor: string = "",
-    favoriteCompanies: String[] = [],
-    doNotShow: String[] = [],
+    favoriteCompanies: string[] = [],
+    doNotShow: string[] = [],
   ) {
     const existingPreferences = await this.preferences.readOne({ userId: userId });
-    console.log(userId, interests, age, location, lookingFor, favoriteCompanies, doNotShow);
     if (existingPreferences) {
       throw new Error("User already has preferences.");
     }
@@ -50,28 +49,63 @@ export default class PreferencesConcept {
   async addInterest(userId: ObjectId, interest: string) {
     const userPreferences = await this.preferences.readOne({ userId: userId });
     if (userPreferences) {
-      let newArray = userPreferences.favoriteCompanies.concat(interest);
+      let newArray = userPreferences.interests;
+      console.log(newArray);
+      if (!newArray.includes(interest)) {
+        newArray.concat(interest);
+      }
       await this.preferences.partialUpdateOne({ userId: userId }, { interests: newArray });
     }
+  }
+
+  async updateInterests(userId: ObjectId, newInterests: string[]) {
+    await this.preferences.partialUpdateOne({ userId: userId }, { interests: newInterests });
   }
 
   async addFavoriteCompany(userId: ObjectId, company: string) {
     const userPreferences = await this.preferences.readOne({ userId: userId });
     if (userPreferences) {
-      let newArray = userPreferences.favoriteCompanies.concat(company);
+      let newArray = userPreferences.favoriteCompanies;
+      if (!newArray.includes(company)) {
+        newArray.concat(company);
+      }
       await this.preferences.partialUpdateOne({ userId: userId }, { favoriteCompanies: newArray });
     }
+  }
+
+  async updateFavoriteCompanies(userId: ObjectId, newFavoriteCompanies: string[]) {
+    await this.preferences.partialUpdateOne({ userId: userId }, { favoriteCompanies: newFavoriteCompanies });
   }
 
   async blockContent(userId: ObjectId, block: string) {
     const userPreferences = await this.preferences.readOne({ userId: userId });
     if (userPreferences) {
-      let newArray = userPreferences.doNotShow.concat(block);
+      let newArray = userPreferences.doNotShow;
+      if (!(block in newArray)) {
+        newArray.concat(block);
+      }
       if (block in userPreferences.interests) {
         let index = userPreferences.interests.indexOf(block);
         userPreferences.interests.splice(index, 1);
       }
       await this.preferences.partialUpdateOne({ userId: userId }, { doNotShow: newArray });
+    }
+  }
+
+  async updateDoNotShow(userId: ObjectId, newDoNotShowList: string[]) {
+    const userPreferences = await this.preferences.readOne({ userId: userId });
+    if (userPreferences) {
+      // Filter out any blocked items from the user's interests
+      const updatedInterests = userPreferences.interests.filter((interest) => !newDoNotShowList.includes(interest));
+
+      // Update the user preferences with the new "Do Not Show" list
+      await this.preferences.partialUpdateOne(
+        { userId: userId },
+        {
+          doNotShow: newDoNotShowList,
+          interests: updatedInterests,
+        },
+      );
     }
   }
 

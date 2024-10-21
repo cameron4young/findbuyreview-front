@@ -11,15 +11,37 @@ import { onMounted, ref } from 'vue';
 
 const { currentUsername, isLoggedIn } = storeToRefs(useUserStore());
 
-// State variables to store data from child components
 const age = ref<number | null>(null);
 const location = ref<string>('');
 const lookingFor = ref<string>('');
 const userInterests = ref<string[]>([]);
-const companyInterests = ref<string[]>([]);
+const favoriteCompanies = ref<string[]>([]);
 const doNotShowList = ref<string[]>([]);
 
-// Function to fetch existing preferences
+// Static list of available companies and interests
+const availableCompanies = [
+  'Nike', 'Adidas', 'Puma', 'Under Armour', 'H&M', 'Zara', 'Gucci', 'Louis Vuitton', 
+  'Apple', 'Samsung', 'Coca-Cola', 'Pepsi', 'Starbucks', 'McDonald\'s', 'Subway', 
+  'Amazon', 'IKEA', 'Walmart', 'Target', 'Best Buy', 'Home Depot', 'Lowe\'s', 
+  'Sephora', 'Ulta Beauty', 'L\'Oréal', 'Chanel', 'Dior', 'Microsoft', 'Netflix', 
+  'Disney', 'Sony', 'Toyota', 'Honda', 'Ford', 'Chevrolet', 'BMW', 'Mercedes-Benz'
+];
+
+const availableInterests = [
+  'Sports', 'Movies', 'Music', 'Gaming', 'Technology', 'Art', 'Fashion', 'Fitness',
+  'Travel', 'Cooking', 'Politics', 'Books', 'Celebrities', 'Health & Wellness', 
+  'Yoga', 'Meditation', 'Hiking', 'Biking', 'Photography', 'Cars', 'Luxury', 
+  'Interior Design', 'DIY Projects', 'Gardening', 'Fishing', 'Camping', 'Surfing',
+  'Skiing', 'Snowboarding', 'Home Improvement', 'Business', 'Finance', 'Investing'
+];
+
+// Loading state
+const isLoading = ref(true);
+
+// Suggested lists for interests and companies that combine user-selected options and suggestions
+const suggestedInterests = ref<string[]>([]);
+const suggestedCompanies = ref<string[]>([]);
+
 const fetchPreferences = async () => {
   try {
     const response = await fetch('/api/preferences', {
@@ -31,24 +53,44 @@ const fetchPreferences = async () => {
 
     if (response.ok) {
       const data = await response.json();
-      age.value = data.preferences.age || null;
-      location.value = data.preferences.location || '';
-      lookingFor.value = data.preferences.lookingFor || '';
-      userInterests.value = data.preferences.userInterests || [];
-      companyInterests.value = data.preferences.companyInterests || [];
-      doNotShowList.value = data.preferences.doNotShow || [];
+      if (data.preferences!==null){
+        age.value = data.preferences.age || null;
+        location.value = data.preferences.location || '';
+        lookingFor.value = data.preferences.lookingFor || '';
+        userInterests.value = data.preferences.interests || [];
+        favoriteCompanies.value = data.preferences.favoriteCompanies || [];
+        doNotShowList.value = data.preferences.doNotShow || [];
+      }
+      if (userInterests.value.length === 0) {
+        suggestedInterests.value = availableInterests;
+      } else {
+        suggestedInterests.value = Array.from(new Set([...userInterests.value, ...availableInterests]));
+      }
+
+      if (favoriteCompanies.value.length === 0) {
+        suggestedCompanies.value = availableCompanies;
+      } else {
+        suggestedCompanies.value = Array.from(new Set([...favoriteCompanies.value, ...availableCompanies]));
+      }
+      
     } else {
       console.error('Failed to fetch preferences');
     }
   } catch (error) {
     console.error('Error fetching preferences:', error);
+  } finally {
+    isLoading.value = false; // Set loading state to false after fetch is complete
   }
 };
 
 // Call fetchPreferences when the component is mounted
-onMounted(() => {
+onMounted(async () => {
   if (isLoggedIn.value) {
-    fetchPreferences();
+    await fetchPreferences();
+    console.log(suggestedCompanies);
+    console.log(suggestedCompanies.value);
+  } else {
+    isLoading.value = false;
   }
 });
 
@@ -69,18 +111,16 @@ const updateUserInterests = (value: string[]) => {
   userInterests.value = value;
 };
 
-const updateCompanyInterests = (value: string[]) => {
-  companyInterests.value = value;
+const updatefavoriteCompanies = (value: string[]) => {
+  favoriteCompanies.value = value;
 };
 
 const updateDoNotShowList = (value: string[]) => {
   doNotShowList.value = value;
 };
 
-// Function to handle the save action
 const handleSave = async () => {
   try {
-    // Attempt to create the user profile
     const createResponse = await fetch('/api/preferences', {
       method: 'POST',
       headers: {
@@ -92,7 +132,6 @@ const handleSave = async () => {
       console.log('User profile might already exist, proceeding with updates.');
     }
 
-    // Step 2: Add each data point one by one
     if (age.value !== null) {
       await saveUserAge(age.value);
     }
@@ -100,7 +139,6 @@ const handleSave = async () => {
     if (location.value) {
       await saveUserLocation(location.value);
     }
-
     if (lookingFor.value) {
       await saveUserLookingFor(lookingFor.value);
     }
@@ -109,8 +147,8 @@ const handleSave = async () => {
       await saveUserInterests(userInterests.value);
     }
 
-    if (companyInterests.value.length > 0) {
-      await saveFavoriteCompanies(companyInterests.value);
+    if (favoriteCompanies.value.length > 0) {
+      await saveFavoriteCompanies(favoriteCompanies.value);
     }
 
     if (doNotShowList.value.length > 0) {
@@ -138,7 +176,6 @@ const saveUserAge = async (newAge: number) => {
   }
 };
 
-// Function to save location
 const saveUserLocation = async (newLocation: string) => {
   const response = await fetch(`/api/preferences/location`, {
     method: 'PATCH',
@@ -153,7 +190,6 @@ const saveUserLocation = async (newLocation: string) => {
   }
 };
 
-// Function to save "Looking For" status
 const saveUserLookingFor = async (newLookingFor: string) => {
   const response = await fetch(`/api/preferences/looking-for`, {
     method: 'PATCH',
@@ -168,54 +204,45 @@ const saveUserLookingFor = async (newLookingFor: string) => {
   }
 };
 
-// Function to save user interests
-const saveUserInterests = async (interests: string[]) => {
-  for (const interest of interests) {
-    const response = await fetch(`/api/preferences/interests`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ interest }),
-    });
+const saveUserInterests = async (newInterests: string[]) => {
+  const response = await fetch(`/api/preferences/interests`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ newInterests }),
+  });
 
-    if (!response.ok) {
-      throw new Error(`Failed to add interest: ${interest}`);
-    }
+  if (!response.ok) {
+    throw new Error('Failed to update interests');
   }
 };
 
-// Function to save favorite companies
-const saveFavoriteCompanies = async (companies: string[]) => {
-  for (const company of companies) {
-    const response = await fetch(`/api/preferences/favorite-companies`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ company }),
-    });
+const saveFavoriteCompanies = async (newFavoriteCompanies: string[]) => {
+  const response = await fetch(`/api/preferences/favorite-companies`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ newFavoriteCompanies }), 
+  });
 
-    if (!response.ok) {
-      throw new Error(`Failed to add favorite company: ${company}`);
-    }
+  if (!response.ok) {
+    throw new Error('Failed to update favorite companies');
   }
 };
 
-// Function to save "Do Not Show" list
-const saveDoNotShowList = async (items: string[]) => {
-  for (const item of items) {
-    const response = await fetch(`/api/preferences/blocked`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ block: item }),
-    });
+const saveDoNotShowList = async (newDoNotShowList: string[]) => {
+  const response = await fetch(`/api/preferences/do-not-show`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ newDoNotShowList }),
+  });
 
-    if (!response.ok) {
-      throw new Error(`Failed to block content: ${item}`);
-    }
+  if (!response.ok) {
+    throw new Error('Failed to update blocked items');
   }
 };
 </script>
@@ -225,13 +252,17 @@ const saveDoNotShowList = async (items: string[]) => {
     <h1>Edit Preferences</h1>
     <p style="text-align: center;">This data is used to recommend content to help you find better products! All questions are optional.</p>
 
-    <section>
+    <section v-if="!isLoading">
       <div v-if="isLoggedIn">
         <AgeInput :value="age" @update:age="updateAge" />
         <LocationInput :value="location" @update:location="updateLocation" />
         <LookingFor :value="lookingFor" @update:lookingFor="updateLookingFor" />
-        <UserInterestComponent :value="userInterests" @update:selectedInterests="updateUserInterests" />
-        <CompanyInterestComponent :value="companyInterests" @update:selectedCompanies="updateCompanyInterests" />
+        <UserInterestComponent :value="userInterests" :suggestedInterests="suggestedInterests" @update:selectedInterests="updateUserInterests" />
+        <CompanyInterestComponent 
+          :initialCompanies="suggestedCompanies" 
+          :initialSelectedCompanies="favoriteCompanies" 
+          @update:selectedCompanies="updatefavoriteCompanies" 
+        />
         <DoNotShow :value="doNotShowList" @update:doNotShow="updateDoNotShowList" />
         <button @click="handleSave" class="btn-save">Save Preferences</button>
       </div>
