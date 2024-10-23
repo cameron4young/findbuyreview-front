@@ -51,6 +51,14 @@ export default class PostingConcept {
     return await this.posts.readMany({ author });
   }
 
+  async getPostById(_id: ObjectId) {
+    const post = await this.posts.readOne({ _id });
+    if (!post) {
+      throw new NotFoundError(`Post with ID ${_id} not found.`);
+    }
+    return post;
+  }
+
   async update(_id: ObjectId, content?: string, rating?: number, productURL?: string, options?: PostOptions) {
     await this.posts.partialUpdateOne({ _id }, { content, rating, productURL, options });
     return { msg: "Post successfully updated!" };

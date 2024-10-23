@@ -16,9 +16,6 @@ const deletePost = async () => {
   }
   emit("refreshPosts");
 };
-
-
-
 </script>
 
 <template>
@@ -27,7 +24,7 @@ const deletePost = async () => {
     <p>{{ props.post.content }}</p>
     <div v-if="props.post.video" class="video-container">
       <iframe 
-        :src=props.post.video
+        :src="props.post.video"
         width="560" 
         height="315" 
         title="YouTube video player" 
@@ -36,6 +33,10 @@ const deletePost = async () => {
         allowfullscreen>
       </iframe>
     </div>
+    <p v-if="props.post.productURL" class="product-url">
+      <a :href="props.post.productURL" target="_blank">View Product</a>
+    </p>
+    <p v-if="props.post.rating" class="rating">Rating: {{ props.post.rating }}/5</p>
     <div class="base">
       <menu v-if="props.post.author == currentUsername">
         <li><button class="btn-small pure-button" @click="emit('editPost', props.post._id)">Edit</button></li>
@@ -61,6 +62,17 @@ const deletePost = async () => {
 
 .video-container {
   margin: 1em 0;
+}
+
+.product-url {
+  margin: 0.5em 0;
+  font-size: 1em;
+}
+
+.rating {
+  margin: 0.5em 0;
+  font-weight: bold;
+  color: #555;
 }
 
 menu {

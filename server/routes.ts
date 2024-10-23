@@ -84,6 +84,18 @@ class Routes {
     return Responses.posts(posts);
   }
 
+  @Router.get("/posts/:id")
+  async getPostById(id: string) {
+    try {
+      const postId = new ObjectId(id);
+      const post = await Posting.getPostById(postId);
+      return Responses.posts([post]);
+    } catch (error) {
+      console.error(error);
+      return 404;
+    }
+  }
+
   @Router.post("/posts")
   async createPost(session: SessionDoc, content: string, video: string, productURL: string, rating: number, options?: PostOptions) {
     const user = Sessioning.getUser(session);

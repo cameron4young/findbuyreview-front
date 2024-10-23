@@ -95,10 +95,7 @@ export default class PreferencesConcept {
   async updateDoNotShow(userId: ObjectId, newDoNotShowList: string[]) {
     const userPreferences = await this.preferences.readOne({ userId: userId });
     if (userPreferences) {
-      // Filter out any blocked items from the user's interests
       const updatedInterests = userPreferences.interests.filter((interest) => !newDoNotShowList.includes(interest));
-
-      // Update the user preferences with the new "Do Not Show" list
       await this.preferences.partialUpdateOne(
         { userId: userId },
         {

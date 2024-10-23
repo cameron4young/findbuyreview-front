@@ -5,6 +5,7 @@ import { useUserStore } from "@/stores/user";
 import HomeView from "../views/HomeView.vue";
 import LoginView from "../views/LoginView.vue";
 import NotFoundView from "../views/NotFoundView.vue";
+import PostView from "../views/PostView.vue";
 import PreferencesView from "../views/PreferencesView.vue";
 import SettingView from "../views/SettingView.vue";
 
@@ -38,6 +39,12 @@ const router = createRouter({
       path: "/preferences",
       name: "Preferences",
       component: PreferencesView,
+    },
+    {
+      path: "/post/:id",
+      name: "Post",
+      component: PostView,
+      props: true,
     },
     {
       path: "/:catchAll(.*)",
