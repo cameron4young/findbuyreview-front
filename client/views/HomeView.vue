@@ -51,12 +51,13 @@ const compileBlockedPosts = async () => {
     // If the item is a label, fetch the posts associated with it
     const response = await fetchy(`/api/label/${item}`, "GET");
     if (response.posts && Array.isArray(response.posts)) {
-      response.posts.forEach((postId) => {
+      response.posts.forEach((postId: string) => {
         blockedPostIds.value.add(postId);
       });
     }
   }
 };
+
 
 // Fetch posts based on the selected interest
 const fetchPostsByInterest = async (interest: string | null) => {
