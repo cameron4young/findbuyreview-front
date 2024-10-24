@@ -1,29 +1,28 @@
 <script setup lang="ts">
 import PostThumbnail from "@/components/Post/PostThumbnail.vue";
-import { fetchy } from "@/utils/fetchy";
-import { onMounted, ref } from "vue";
+import { PropType } from "vue";
 
-const posts = ref([]);
-
-const fetchPosts = async () => {
-  try {
-    const postResults = await fetchy("/api/posts", "GET");
-    posts.value = postResults;
-  } catch (error) {
-    console.error("Error fetching posts:", error);
-  }
-};
-
-// Fetch posts when the component is mounted
-onMounted(async () => {
-  await fetchPosts();
+// Define props with proper types
+const props = defineProps({
+  posts: {
+    type: Array as PropType<Array<{
+      _id: string;
+      content: string;
+      author: string;
+      rating?: number;
+      video?: string;
+    }>>,
+    required: true,
+  },
+  buttonLabel: {
+    type: String,
+    required: true,
+  },
+  buttonAction: {
+    type: Function as PropType<(postId: string) => void>,
+    required: true,
+  },
 });
-
-// Function to handle the "Do Not Show" event
-const doNotShowPost = (postId) => {
-  // Logic to remove or hide the post from the grid
-  posts.value = posts.value.filter((post) => post._id !== postId);
-};
 </script>
 
 <template>
@@ -36,7 +35,8 @@ const doNotShowPost = (postId) => {
       :rating="post.rating"
       :videoUrl="post.video"
       :id="post._id"
-      @doNotShow="doNotShowPost(post._id)"
+      :buttonLabel="buttonLabel"
+      @doNotShow="() => buttonAction(post._id)"
     />
   </div>
 </template>
@@ -44,22 +44,18 @@ const doNotShowPost = (postId) => {
 <style scoped>
 .post-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2em; /* Adds spacing between columns and rows */
-  padding: 2em;
-  justify-items: center;
-  align-items: start;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5em;
+  padding: 1em;
 }
 
 @media (max-width: 900px) {
-  /* For medium screens (e.g., tablets), display 2 items per row */
   .post-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 600px) {
-  /* For small screens (e.g., phones), display 1 item per row */
   .post-grid {
     grid-template-columns: 1fr;
   }

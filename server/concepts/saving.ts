@@ -23,6 +23,12 @@ export default class SavingConcept {
   }
 
   async createCollection(user: ObjectId, name: string) {
+    const existingCollection = await this.collections.readOne({ user, name });
+
+    if (existingCollection) {
+      throw new Error("A collection with this name already exists for this user.");
+    }
+
     const _id = await this.collections.createOne({ user, name, posts: [] });
     return { msg: "Collection successfully created!", collection: await this.collections.readOne({ _id }) };
   }

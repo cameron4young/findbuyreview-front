@@ -86,14 +86,14 @@ class Routes {
 
   @Router.get("/posts/:id")
   async getPostById(id: string) {
-    try {
-      const postId = new ObjectId(id);
-      const post = await Posting.getPostById(postId);
-      return Responses.posts([post]);
-    } catch (error) {
-      console.error(error);
-      return 404;
+    const postId = new ObjectId(id);
+    const post = await Posting.getPostById(postId);
+
+    if (!post) {
+      return 404; // Return 404 if no post is found with this ID
     }
+
+    return Responses.posts([post]);
   }
 
   @Router.post("/posts")
@@ -170,7 +170,7 @@ class Routes {
   async createCollection(session: SessionDoc, collectionName: string) {
     const user = Sessioning.getUser(session);
     const saved = await Saving.createCollection(user, collectionName);
-    return { msg: saved.msg, collection: saved.collection };
+    return { collection: saved.collection };
   }
 
   @Router.delete("/collection")
@@ -184,36 +184,45 @@ class Routes {
     return { msg: "Could not find Collection" };
   }
 
-  @Router.get("/collection")
-  async getCollections(session: SessionDoc) {
-    const collections = await Saving.getAllCollectionNames();
-    return { collections: collections };
-  }
-  @Router.get("/collections/user/:userId")
-  async getCollectionsByUser(session: SessionDoc, userId: string) {
-    const userObjectId = new ObjectId(userId);
-    const collections = await Saving.getCollectionsByUser(userObjectId);
-    return { msg: "Collections fetched successfully", collections };
+  @Router.get("/collection/user/")
+  async getCollectionsByUser(session: SessionDoc) {
+    const user = Sessioning.getUser(session);
+    const collections = await Saving.getCollectionsByUser(user);
+    return { collections };
   }
 
-  @Router.get("/collection/:collectionName")
-  async getCollection(session: SessionDoc, collectionName: string) {
-    const user = Sessioning.getUser(session);
-    const id = await Saving.getCollectionByName(user, collectionName);
-    if (id == null) {
-      return { msg: "Could not find collection name" };
+  @Router.get("/posts/collection/:collectionId")
+  async getPostsInCollection(session: SessionDoc, collectionId: string) {
+    try {
+      const user = Sessioning.getUser(session);
+      const collectionObjectId = new ObjectId(collectionId);
+
+      // Fetch the collection
+      const collection = await Saving.getPostsInCollection(user, collectionObjectId);
+      if (!collection) {
+        return { msg: "Collection not found" };
+      }
+
+      // Retrieve full post documents based on the post IDs in the collection
+      const postIds = collection; // Assuming this is an array of ObjectId
+      const posts = await Posting.getPostsByIds(collection);
+
+      return Responses.posts(posts);
+    } catch (error) {
+      console.error(error);
+      return 404;
     }
-    const posts = await Saving.getPostsInCollection(user, id);
-    return { posts: posts };
   }
 
   @Router.post("/save")
-  async savePostToCollection(session: SessionDoc, collectionName: string, id: string) {
+  async savePostToCollection(session: SessionDoc, collectionId: string, id: string) {
     const user = Sessioning.getUser(session);
-    const collectionId = await Saving.getCollectionByName(user, collectionName);
     const oid = new ObjectId(id);
-    if (collectionId != null) {
-      const saved = await Saving.savePostToCollection(user, collectionId, oid);
+    const cid = new ObjectId(collectionId);
+    console.log(user, oid, cid);
+    if (cid != null) {
+      const saved = await Saving.savePostToCollection(user, cid, oid);
+      console.log(saved, "saved");
       return { msg: saved.msg };
     }
     return { msg: "Could not find Collection" };
@@ -247,9 +256,17 @@ class Routes {
 
   @Router.get("/label/:label")
   async getPostsByLabel(session: SessionDoc, label: string) {
-    const user = Sessioning.getUser(session);
-    const posts = await Labeling.getPostsByLabel(label);
-    return { posts };
+    try {
+      const user = Sessioning.getUser(session);
+      const postIds = await Labeling.getPostsByLabel(label);
+      if (!postIds || postIds.length === 0) {
+        return { posts: [] };
+      }
+      const posts = await Posting.getPostsByIds(postIds);
+      return Responses.posts(posts);
+    } catch (error) {
+      return { status: 500 };
+    }
   }
 
   @Router.post("/preferences")

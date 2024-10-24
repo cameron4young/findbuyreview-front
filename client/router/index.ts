@@ -2,11 +2,13 @@ import { storeToRefs } from "pinia";
 import { createRouter, createWebHistory } from "vue-router";
 
 import { useUserStore } from "@/stores/user";
+import CreatePostView from "../views/CreatePostView.vue";
 import HomeView from "../views/HomeView.vue";
 import LoginView from "../views/LoginView.vue";
 import NotFoundView from "../views/NotFoundView.vue";
 import PostView from "../views/PostView.vue";
 import PreferencesView from "../views/PreferencesView.vue";
+import SavedPostsView from "../views/SavedPostsView.vue";
 import SettingView from "../views/SettingView.vue";
 
 const router = createRouter({
@@ -41,10 +43,20 @@ const router = createRouter({
       component: PreferencesView,
     },
     {
+      path: "/create",
+      name: "Create",
+      component: CreatePostView,
+    },
+    {
       path: "/post/:id",
       name: "Post",
       component: PostView,
       props: true,
+    },
+    {
+      path: "/saved",
+      name: "Saved",
+      component: SavedPostsView,
     },
     {
       path: "/:catchAll(.*)",

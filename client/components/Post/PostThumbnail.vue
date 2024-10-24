@@ -2,13 +2,13 @@
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
 
-// Props definition
 const props = defineProps({
   title: String,
   user: String,
   rating: Number,
   videoUrl: String,
-  id: String, // Define the 'id' prop explicitly
+  id: String,
+  buttonLabel: String,
 });
 
 const isHovered = ref(false);
@@ -19,11 +19,10 @@ const videoSrc = computed(() => {
   return isHovered.value ? `${baseUrl}&autoplay=1` : baseUrl;
 });
 
-const toggleHover = (state) => {
+const toggleHover = (state: boolean) => {
   isHovered.value = state;
 };
 
-// Function to navigate to the post page when the component is clicked
 const navigateToPost = () => {
   router.push(`/post/${props.id}`);
 };
@@ -49,13 +48,13 @@ const navigateToPost = () => {
     <p class="post-title">{{ title }}</p>
     <p class="post-user">by {{ user }}</p>
     <p class="post-rating">Rating: {{ rating }} / 5</p>
-    <button class="do-not-show-btn" @click.stop="$emit('doNotShow')">Do Not Show</button>
+    <button class="action-btn" @click.stop="$emit('doNotShow')">{{ buttonLabel }}</button>
   </div>
 </template>
 
 <style scoped>
 .post-thumbnail {
-  width: 100%; /* Make it responsive to fit grid width */
+  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -73,7 +72,7 @@ const navigateToPost = () => {
 }
 
 .iframe-container {
-  width: 100%; /* Full width of the container */
+  width: 100%;
   padding-top: 56.25%; /* 16:9 aspect ratio */
   position: relative;
   overflow: hidden;
@@ -103,7 +102,7 @@ const navigateToPost = () => {
   margin: 0;
 }
 
-.do-not-show-btn {
+.action-btn {
   background-color: #949292;
   color: white;
   border: none;
@@ -111,5 +110,9 @@ const navigateToPost = () => {
   padding: 0.5em;
   cursor: pointer;
   font-size: 0.8em;
+}
+
+.action-btn:hover {
+  background-color: #7a7a7a;
 }
 </style>

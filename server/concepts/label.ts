@@ -50,14 +50,14 @@ export default class LabelingConcept {
   // Get posts by label and automatically expire label if needed
   async getPostsByLabel(label: string): Promise<ObjectId[]> {
     const labelDoc = await this.labels.readOne({ label });
+    console.log(labelDoc);
     if (!labelDoc) {
-      throw new NotFoundError(`Label '${label}' not found.`);
+      return [];
     }
 
     // Automatically expire the label if the expiration date has passed
     if (labelDoc.expiration && new Date() > labelDoc.expiration) {
       await this.labels.deleteOne({ _id: labelDoc._id });
-      throw new NotFoundError(`Label '${label}' has expired.`);
     }
 
     return labelDoc.posts;

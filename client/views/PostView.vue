@@ -1,10 +1,23 @@
 <script setup lang="ts">
+import AddToCollectionButton from "@/components/Saving/AddToCollectionButton.vue";
 import { fetchy } from "@/utils/fetchy";
 import { onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
+// Define the type for the post
+interface Post {
+  _id: string;
+  title: string;
+  author: string;
+  content: string;
+  video?: string; // Optional property
+  productURL?: string;
+  rating?: number;
+  dateCreated: string;
+}
+
 // State to store the post
-const post = ref(null);
+const post = ref<Post | null>(null);
 
 // Get the current route and router instance
 const route = useRoute();
@@ -15,7 +28,7 @@ const fetchPostById = async (id: string) => {
   try {
     const response = await fetchy(`/api/posts/${id}`, "GET");
     if (response) {
-      post.value = response[0]; // Assuming the response is an array with one post
+      post.value = response[0] as Post; // Assuming the response is an array with one post
     } else {
       console.error("Post not found");
       router.push("/404"); // Redirect to a 404 page or handle the error appropriately
@@ -40,7 +53,7 @@ const deletePost = () => {
 };
 
 const goBack = () => {
-  router.push("/"); // Redirect back to the feed or a suitable route
+  router.push("/");
 };
 </script>
 
@@ -63,7 +76,7 @@ const goBack = () => {
     <p class="reviewer-details">About the Reviewer: Speaker Enthusiast, A/V Expert</p>
     <div class="interaction-buttons">
       <button class="btn pure-button">❤️ Like</button>
-      <button class="btn pure-button">💾 Save to Collection</button>
+      <AddToCollectionButton :postId="post._id" />
       <button class="btn pure-button">✉️ Send through Messages</button>
     </div>
     <div class="post-details">

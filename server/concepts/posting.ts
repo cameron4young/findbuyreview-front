@@ -59,6 +59,10 @@ export default class PostingConcept {
     return post;
   }
 
+  async getPostsByIds(postIds: ObjectId[]) {
+    return await this.posts.readMany({ _id: { $in: postIds } });
+  }
+
   async update(_id: ObjectId, content?: string, rating?: number, productURL?: string, options?: PostOptions) {
     await this.posts.partialUpdateOne({ _id }, { content, rating, productURL, options });
     return { msg: "Post successfully updated!" };
