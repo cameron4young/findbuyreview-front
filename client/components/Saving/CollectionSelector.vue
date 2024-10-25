@@ -28,18 +28,26 @@ const fetchCollections = async () => {
   } catch (error) {
     console.error("Error fetching collections:", error);
   }
-  console.log(collections.value, "Collections");
-
 };
 
-// Function to handle collection selection
-const selectCollection = (collectionId: string | null) => {
-  selectedCollection.value = collectionId;
-  emit("selectCollection", collectionId);
+// Function to handle collection selection and toggle selection
+const selectCollection = (collectionId: string) => {
+  // Toggle selection: if the same collection is selected again, unselect it
+  console.log(selectedCollection)
+  if (selectedCollection.value === collectionId) {
+    console.log(`Unselecting collection: ${collectionId}`);
+    selectedCollection.value = null; // Unselect to show the general feed
+  } else {
+    console.log(`Selecting collection: ${collectionId}`);
+    selectedCollection.value = collectionId;
+  }
+  emit("selectCollection", selectedCollection.value);
 };
 
 // Fetch collections when the component is mounted
-onMounted(fetchCollections());
+onMounted(() => {
+  fetchCollections();
+});
 </script>
 
 <template>

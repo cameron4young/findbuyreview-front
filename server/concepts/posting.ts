@@ -63,6 +63,20 @@ export default class PostingConcept {
     return await this.posts.readMany({ _id: { $in: postIds } });
   }
 
+  async searchPosts(query: string): Promise<PostDoc[]> {
+    // Create a RegExp object for the query with case-insensitive search
+    const regex = new RegExp(query, "i");
+
+    console.log("Query", regex);
+
+    return await this.posts.readMany({
+      $or: [
+        { content: { $regex: regex } }, // Match content
+        { labels: { $elemMatch: { $regex: regex } } }, // Match any label in the array
+      ],
+    });
+  }
+
   async update(_id: ObjectId, content?: string, rating?: number, productURL?: string, options?: PostOptions) {
     await this.posts.partialUpdateOne({ _id }, { content, rating, productURL, options });
     return { msg: "Post successfully updated!" };

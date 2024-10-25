@@ -78,11 +78,12 @@ export default class PreferencesConcept {
   }
 
   async blockContent(userId: ObjectId, block: string) {
+    console.log(userId, block);
     const userPreferences = await this.preferences.readOne({ userId: userId });
     if (userPreferences) {
       let newArray = userPreferences.doNotShow;
       if (!(block in newArray)) {
-        newArray.concat(block);
+        newArray = newArray.concat(block);
       }
       if (block in userPreferences.interests) {
         let index = userPreferences.interests.indexOf(block);

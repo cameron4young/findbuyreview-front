@@ -48,8 +48,20 @@ const selectCollection = (collectionId: string | null) => {
   }
 };
 
-const removePostFromCollection = (postId: string) => {
-  posts.value = posts.value.filter((post) => post._id !== postId);
+const removePostFromCollection = async (postId: string) => {
+    if (selectedCollection.value){
+      try {
+      const response = await fetchy(`/api/save/${encodeURIComponent(selectedCollection.value)}/${encodeURIComponent(postId)}`, "DELETE");
+
+    if (response.msg === "Post successfully removed from collection!") {
+      posts.value = posts.value.filter((post) => post._id !== postId);
+    } else {
+      console.error("Error removing post:", response.msg);
+    }
+    } catch (error) {
+      console.error("Error removing post from collection:", error);
+    }
+    }
 };
 
 onMounted(async () => {

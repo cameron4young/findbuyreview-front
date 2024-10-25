@@ -119,6 +119,39 @@ class Routes {
     return Posting.delete(oid);
   }
 
+  @Router.get("/posts/search/:searchQuery")
+  async searchPosts(session: SessionDoc, searchQuery: string) {
+    try {
+      const schema = z.string().nonempty("Query is required.");
+      const validatedQuery = schema.parse(searchQuery);
+
+      // Search for the original query
+      const namePosts = await Posting.searchPosts(validatedQuery);
+
+      // Search for posts by label (original case and capitalized version)
+      const labelVariants = [searchQuery, searchQuery.charAt(0).toUpperCase() + searchQuery.slice(1).toLowerCase()];
+
+      let postIds = [];
+      for (const label of labelVariants) {
+        const ids = await Labeling.getPostsByLabel(label);
+        postIds.push(...ids);
+      }
+
+      // Remove duplicates by creating a Set
+      postIds = [...new Set(postIds)];
+
+      const categoryPosts = await Posting.getPostsByIds(postIds);
+
+      return { posts: [...namePosts, ...categoryPosts] };
+    } catch (error) {
+      console.error("Error in searchPosts:", error);
+      if (error instanceof z.ZodError) {
+        return { status: 400, msg: "Invalid query: " + error.errors[0].message };
+      }
+      return { status: 500, msg: "Internal Server Error" };
+    }
+  }
+
   @Router.get("/friends")
   async getFriends(session: SessionDoc) {
     const user = Sessioning.getUser(session);
@@ -228,16 +261,21 @@ class Routes {
     return { msg: "Could not find Collection" };
   }
 
-  @Router.delete("/save")
-  async removePostFromCollection(session: SessionDoc, collectionName: string, id: string) {
-    const user = Sessioning.getUser(session);
-    const collectionId = await Saving.getCollectionByName(user, collectionName);
-    const oid = new ObjectId(id);
-    if (collectionId != null) {
-      const saved = await Saving.removePostFromCollection(user, collectionId, oid);
-      return { msg: saved.msg };
+  @Router.delete("/save/:collectionId/:id")
+  async removePostFromCollection(session: SessionDoc, collectionId: string, id: string) {
+    try {
+      const user = Sessioning.getUser(session);
+      const oid = new ObjectId(id);
+      const cid = new ObjectId(collectionId);
+      if (cid != null) {
+        const saved = await Saving.removePostFromCollection(user, cid, oid);
+        return { msg: saved.msg };
+      }
+      return { msg: "Could not find Collection" };
+    } catch (error) {
+      console.error("Error removing post from collection:", error);
+      return { status: 500, msg: "Internal Server Error" };
     }
-    return { msg: "Could not find Collection" };
   }
 
   @Router.post("/label")
@@ -309,6 +347,7 @@ class Routes {
 
   @Router.post("/preferences/blocked")
   async blockContent(session: SessionDoc, block: string) {
+    console.log(block);
     const user = Sessioning.getUser(session);
     await Preferences.blockContent(user, block);
     return { msg: `Content ${block} blocked for user ${user}` };

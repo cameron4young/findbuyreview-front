@@ -24,6 +24,10 @@ export default class LabelingConcept {
 
   // Add a label to a post with optional expiration date (for promoted labels)
   async addLabelToPost(label: string, postId: ObjectId, expirationDate?: Date) {
+    if (label === "promoted" && !expirationDate) {
+      throw new Error("Promoted label must have an expiration date.");
+    }
+
     let labelDoc = await this.labels.readOne({ label });
     if (!labelDoc) {
       await this.labels.createOne({ label, posts: [postId], expiration: expirationDate });
@@ -50,7 +54,6 @@ export default class LabelingConcept {
   // Get posts by label and automatically expire label if needed
   async getPostsByLabel(label: string): Promise<ObjectId[]> {
     const labelDoc = await this.labels.readOne({ label });
-    console.log(labelDoc);
     if (!labelDoc) {
       return [];
     }
@@ -58,6 +61,7 @@ export default class LabelingConcept {
     // Automatically expire the label if the expiration date has passed
     if (labelDoc.expiration && new Date() > labelDoc.expiration) {
       await this.labels.deleteOne({ _id: labelDoc._id });
+      return [];
     }
 
     return labelDoc.posts;

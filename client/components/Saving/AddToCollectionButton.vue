@@ -26,7 +26,6 @@ const fetchCollections = async () => {
 
 // Function to handle saving a post to an existing collection
 const saveToCollection = async (collectionId: string) => {
-  console.log(collectionId);
   try {
     await fetchy("/api/save", "POST", {
       body: { collectionId: collectionId, id: props.postId },
