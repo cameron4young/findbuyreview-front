@@ -11,6 +11,7 @@ dotenv.config();
 import type { SessionDoc } from "../server/concepts/sessioning";
 
 // Test mode must be set before importing the routes
+import { after, beforeEach, describe, it } from "mocha";
 import { app } from "../server/routes";
 
 import db, { client } from "../server/db";

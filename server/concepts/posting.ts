@@ -72,7 +72,6 @@ export default class PostingConcept {
     return await this.posts.readMany({
       $or: [
         { content: { $regex: regex } }, // Match content
-        { labels: { $elemMatch: { $regex: regex } } }, // Match any label in the array
       ],
     });
   }

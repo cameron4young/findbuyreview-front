@@ -24,16 +24,17 @@ const blockedPostIds = ref<Set<string>>(new Set());
 const loadingInterests = ref(true);
 const loadingPosts = ref(false);
 const error = ref<string | null>(null);
-const showSearchDialog = ref(false);
 const searchQuery = ref("");
+const lookingFor = ref<string>("");
 
-// Fetch interests and do-not-show preferences
+// Fetch interests and other user preferences
 const fetchPreferences = async () => {
   try {
     loadingInterests.value = true;
     const response = await fetchy("/api/preferences", "GET");
     if (response.preferences) {
       interests.value = response.preferences.interests || [];
+      lookingFor.value = response.preferences.lookingFor || "";
       doNotShowList.value = response.preferences.doNotShow || [];
       await compileBlockedPosts();
     } else {
@@ -47,23 +48,18 @@ const fetchPreferences = async () => {
   }
 };
 
-// Compile a list of posts to be blocked based on the "Do Not Show" labels
+// Compile posts to be blocked based on "Do Not Show" labels
 const compileBlockedPosts = async () => {
   blockedPostIds.value.clear();
 
   for (const item of doNotShowList.value) {
-    // Check if the item is a valid ObjectId (i.e., a post ID)
     if (isValidObjectId(item)) {
-      // Add the post ID directly to the blockedPostIds set
       blockedPostIds.value.add(item);
     } else {
-      // If the item is not a post ID, treat it as a label
       try {
         const response = await fetchy(`/api/label/${item}`, "GET");
         if (response.posts && Array.isArray(response.posts)) {
-          response.posts.forEach((postId: string) => {
-            blockedPostIds.value.add(postId);
-          });
+          response.posts.forEach((postId: string) => blockedPostIds.value.add(postId));
         } else {
           console.error(`No posts found for label ${item}`);
         }
@@ -75,23 +71,53 @@ const compileBlockedPosts = async () => {
 };
 
 // Utility function to check if a string is a valid ObjectId
-const isValidObjectId = (id: string): boolean => {
-  return /^[a-f\d]{24}$/i.test(id);
-};
+const isValidObjectId = (id: string): boolean => /^[a-f\d]{24}$/i.test(id);
 
-// Fetch posts based on the selected interest
+// Fetch posts based on selected interest
 const fetchPostsByInterest = async (interest: string | null) => {
   try {
     loadingPosts.value = true;
     error.value = null;
-    const endpoint = interest ? `/api/label/${interest}` : "/api/posts";
-    const response = await fetchy(endpoint, "GET");
 
-    const fetchedPosts = Array.isArray(response.posts) ? response.posts : response;
-    if (Array.isArray(fetchedPosts)) {
-      posts.value = fetchedPosts.filter((post: Post) => !blockedPostIds.value.has(post._id));
+    if (interest) {
+      selectedInterest.value = interest;
+      const response = await fetchy(`/api/label/${interest}`, "GET");
+      const interestPosts: Post[] = Array.isArray(response.posts) ? response.posts : response;
+      const promotedResponse = await fetchy(`/api/label/promoted/${interest}`, "GET");
+      const promotedPosts: Post[] = Array.isArray(promotedResponse.posts) ? promotedResponse.posts : [];
+
+      const combinedPosts = [...promotedPosts, ...interestPosts.filter(post => !promotedPosts.some(p => p._id === post._id))];
+      posts.value = combinedPosts.filter((post: Post) => !blockedPostIds.value.has(post._id));
     } else {
-      posts.value = [];
+      selectedInterest.value = null;
+      const response = await fetchy("/api/posts", "GET");
+      const generalPosts = Array.isArray(response.posts) ? response.posts : response;
+
+      let promotedPosts: Post[] = [];
+      if (lookingFor.value) {
+        const promotedLookingForResponse = await fetchy(`/api/label/promoted/${lookingFor.value}`, "GET");
+        promotedPosts = Array.isArray(promotedLookingForResponse.posts) ? promotedLookingForResponse.posts : [];
+      }
+
+      if (promotedPosts.length === 0 && interests.value.length > 0) {
+        for (const userInterest of interests.value) {
+          const promotedInterestResponse = await fetchy(`/api/label/promoted/${userInterest}`, "GET");
+          promotedPosts.push(...(Array.isArray(promotedInterestResponse.posts) ? promotedInterestResponse.posts : []));
+        }
+        promotedPosts = promotedPosts.filter((post, index, self) => index === self.findIndex((p) => p._id === post._id));
+      }
+
+      const postsToDisplay = [];
+      let promotedIndex = 0;
+      for (let i = 0; i < generalPosts.length; i++) {
+        if (i > 0 && i % 6 === 0 && promotedIndex < promotedPosts.length) {
+          if (!blockedPostIds.value.has(promotedPosts[promotedIndex]._id)) postsToDisplay.push(promotedPosts[promotedIndex]);
+          promotedIndex++;
+        }
+        if (!blockedPostIds.value.has(generalPosts[i]._id)) postsToDisplay.push(generalPosts[i]);
+      }
+
+      posts.value = postsToDisplay;
     }
   } catch (err) {
     console.error("Error fetching posts:", err);
@@ -105,19 +131,11 @@ const fetchPostsByInterest = async (interest: string | null) => {
 const fetchPostsBySearch = async (searchQuery: string) => {
   try {
     loadingPosts.value = true;
-    selectedInterest.value=null;
+    selectedInterest.value = null;
     error.value = null;
 
-    // Make a GET request with the query passed as a URL parameter
-    const response = await fetchy(`/api/posts/search/`+searchQuery, "GET");
-
-    const fetchedPosts = Array.isArray(response.posts) ? response.posts : response;
-
-    if (Array.isArray(fetchedPosts)) {
-      posts.value = fetchedPosts.filter((post: Post) => !blockedPostIds.value.has(post._id));
-    } else {
-      posts.value = [];
-    }
+    const response = await fetchy(`/api/posts/search/` + searchQuery, "GET");
+    posts.value = Array.isArray(response.posts) ? response.posts.filter((post: Post) => !blockedPostIds.value.has(post._id)) : [];
   } catch (err) {
     console.error("Error fetching posts:", err);
     error.value = "Error loading posts. Please try again later.";
@@ -126,8 +144,12 @@ const fetchPostsBySearch = async (searchQuery: string) => {
   }
 };
 
-
-
+// Trigger search when Enter key is pressed
+const handleSearchEnter = (event: KeyboardEvent) => {
+  if (event.key === "Enter" && searchQuery.value.trim()) {
+    fetchPostsBySearch(searchQuery.value.trim());
+  }
+};
 
 // Handle interest selection and unselection
 const selectInterest = (interest: string | null) => {
@@ -152,19 +174,6 @@ const handleDoNotShowPost = async (postId: string) => {
   }
 };
 
-// Open the search dialog
-const openSearchDialog = () => {
-  showSearchDialog.value = true;
-};
-
-// Perform search and close the dialog
-const performSearch = () => {
-  if (searchQuery.value.trim()) {
-    fetchPostsBySearch(searchQuery.value.trim());
-  }
-  showSearchDialog.value = false;
-};
-
 onMounted(async () => {
   if (isLoggedIn.value) {
     try {
@@ -184,7 +193,28 @@ onMounted(async () => {
       <div v-if="loadingInterests">Loading interests...</div>
       <div v-else-if="error">{{ error }}</div>
       <div v-else>
+        <!-- Search Input Field -->
+        <div class="search-input-container">
+          <input
+            type="text"
+            v-model="searchQuery"
+            placeholder="Search posts..."
+            @keydown="handleSearchEnter"
+            class="search-input"
+          />
+        </div>
+        
         <div class="interest-selector">
+          <!-- General button to show the original feed -->
+          <button
+            class="interest-button"
+            @click="selectInterest(null)"
+            :class="{ active: selectedInterest === null }"
+          >
+            General
+          </button>
+
+          <!-- Interest buttons for each user interest -->
           <button
             v-for="interest in interests"
             :key="interest"
@@ -194,14 +224,14 @@ onMounted(async () => {
           >
             {{ interest }}
           </button>
-          <button class="search-button" @click="openSearchDialog">Search</button>
         </div>
+
         <div v-if="loadingPosts">Loading posts...</div>
-        <PostGrid 
-          v-else-if="posts.length > 0" 
-          :posts="posts" 
-          :buttonLabel="'Do Not Show'" 
-          :buttonAction="handleDoNotShowPost" 
+        <PostGrid
+          v-else-if="posts.length > 0"
+          :posts="posts"
+          :buttonLabel="'Do Not Show'"
+          :buttonAction="handleDoNotShowPost"
         />
         <p v-else>No posts in this category!</p>
       </div>
@@ -209,18 +239,6 @@ onMounted(async () => {
     <section v-else>
       <h1>Please log in!</h1>
     </section>
-
-    <!-- Search Dialog -->
-    <div v-if="showSearchDialog" class="dialog-backdrop">
-      <div class="search-dialog">
-        <h2>Search Posts</h2>
-        <textarea v-model="searchQuery" placeholder="Enter search query"></textarea>
-        <div class="dialog-buttons">
-          <button @click="performSearch" class="search-submit-button">Search</button>
-          <button @click="showSearchDialog = false" class="search-cancel-button">Cancel</button>
-        </div>
-      </div>
-    </div>
   </main>
 </template>
 
@@ -228,6 +246,20 @@ onMounted(async () => {
 h1 {
   text-align: center;
   margin-bottom: 1em;
+}
+
+.search-input-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1em;
+}
+
+.search-input {
+  padding: 0.5em;
+  width: 300px;
+  border: 1px solid #c0c0c0;
+  border-radius: 4px;
+  font-size: 1em;
 }
 
 .interest-selector {
@@ -239,8 +271,7 @@ h1 {
   justify-content: center;
 }
 
-.interest-button,
-.search-button {
+.interest-button {
   background-color: #c0c0c0;
   border: none;
   padding: 0.5em 1em;
@@ -255,63 +286,8 @@ h1 {
   color: white;
 }
 
-.interest-button:hover,
-.search-button:hover {
+.interest-button:hover {
   background-color: #517a6b;
   color: white;
-}
-
-.dialog-backdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.search-dialog {
-  background: white;
-  padding: 1em;
-  border-radius: 8px;
-  width: 300px;
-  box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.2);
-}
-
-textarea {
-  width: 100%;
-  height: 80px;
-  margin-bottom: 1em;
-  padding: 0.5em;
-}
-
-.dialog-buttons {
-  display: flex;
-  justify-content: space-between;
-}
-
-.search-submit-button,
-.search-cancel-button {
-  background-color: #69988d;
-  border: none;
-  padding: 0.5em 1em;
-  cursor: pointer;
-  color: white;
-  border-radius: 4px;
-}
-
-.search-cancel-button {
-  background-color: #e74c3c;
-}
-
-.search-submit-button:hover {
-  background-color: #517a6b;
-}
-
-.search-cancel-button:hover {
-  background-color: #c0392b;
 }
 </style>

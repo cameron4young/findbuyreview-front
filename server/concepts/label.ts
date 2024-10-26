@@ -76,4 +76,26 @@ export default class LabelingConcept {
     }
     return { msg: "Expired labels cleaned up!" };
   }
+
+  async getPostsByLabels(labels: string[]): Promise<ObjectId[]> {
+    const labelDocs = await this.labels.readMany({ label: { $in: labels } });
+
+    const postLabelMap = new Map<string, Set<string>>();
+
+    for (const labelDoc of labelDocs) {
+      for (const postId of labelDoc.posts) {
+        const postIdStr = postId.toHexString();
+        if (!postLabelMap.has(postIdStr)) {
+          postLabelMap.set(postIdStr, new Set());
+        }
+        postLabelMap.get(postIdStr)?.add(labelDoc.label);
+      }
+    }
+
+    const matchingPostIds = Array.from(postLabelMap.entries())
+      .filter(([, labelSet]) => labels.every((label) => labelSet.has(label)))
+      .map(([postIdStr]) => new ObjectId(postIdStr));
+
+    return matchingPostIds;
+  }
 }

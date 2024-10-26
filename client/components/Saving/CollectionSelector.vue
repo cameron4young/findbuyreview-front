@@ -33,7 +33,6 @@ const fetchCollections = async () => {
 // Function to handle collection selection and toggle selection
 const selectCollection = (collectionId: string) => {
   // Toggle selection: if the same collection is selected again, unselect it
-  console.log(selectedCollection)
   if (selectedCollection.value === collectionId) {
     console.log(`Unselecting collection: ${collectionId}`);
     selectedCollection.value = null; // Unselect to show the general feed
