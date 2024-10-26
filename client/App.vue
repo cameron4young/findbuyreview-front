@@ -19,6 +19,7 @@ onBeforeMount(async () => {
     // User is not logged in
   }
 });
+
 </script>
 
 <template>
@@ -34,11 +35,17 @@ onBeforeMount(async () => {
         <li>
           <RouterLink :to="{ name: 'Home' }" :class="{ underline: currentRouteName == 'Home' }"> Home </RouterLink>
         </li>
-        <li v-if="isLoggedIn">
-          <RouterLink :to="{ name: 'Preferences' }" :class="{ underline: currentRouteName == 'Preferences' }"> Preferences </RouterLink>
+        <li>
+          <RouterLink :to="{ name: 'Create' }" :class="{ underline: currentRouteName == 'Create' }"> Create </RouterLink>
+        </li>
+        <li>
+          <RouterLink :to="{ name: 'Messages' }" :class="{ underline: currentRouteName == 'Messages' }"> Messages </RouterLink>
         </li>
         <li v-if="isLoggedIn">
           <RouterLink :to="{ name: 'Saved' }" :class="{ underline: currentRouteName == 'Saved' }"> Saved </RouterLink>
+        </li>
+        <li v-if="isLoggedIn">
+          <RouterLink :to="{ name: 'Preferences' }" :class="{ underline: currentRouteName == 'Preferences' }"> Preferences </RouterLink>
         </li>
         <li v-if="isLoggedIn">
           <RouterLink :to="{ name: 'Settings' }" :class="{ underline: currentRouteName == 'Settings' }"> Settings </RouterLink>
