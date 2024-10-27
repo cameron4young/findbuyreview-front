@@ -90,6 +90,7 @@ const promotePost = async () => {
 //     promoting.value = false;
 //   }
 // };
+};
 </script>
 
 <template>
