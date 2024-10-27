@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { BodyT, fetchy } from "@/utils/fetchy";
-import { ElMessage, ElMessageBox } from "element-plus";
+// import { ElMessage, ElMessageBox } from "element-plus";
 import { defineProps, ref } from 'vue';
 
 const props = defineProps<{ postId: string }>();
@@ -15,41 +15,41 @@ interface LabelRequestBody {
 
 const promotePost = async () => {
   promoting.value = true;
-  try {
+  // try {
     // Prompt for the number of days for promotion
-    const { value: daysValue } = await ElMessageBox.prompt(
-      "Enter the number of days for promotion:",
-      "Promotion Duration",
-      {
-        confirmButtonText: "Next",
-        cancelButtonText: "Cancel",
-        inputPattern: /^\d+$/,
-        inputErrorMessage: "Please enter a valid number of days.",
-      }
-    );
+    // const { value: daysValue } = await ElMessageBox.prompt(
+    //   "Enter the number of days for promotion:",
+    //   "Promotion Duration",
+    //   {
+    //     confirmButtonText: "Next",
+    //     cancelButtonText: "Cancel",
+    //     inputPattern: /^\d+$/,
+    //     inputErrorMessage: "Please enter a valid number of days.",
+    //   }
+    // );
 
-    const expirationDays = parseInt(daysValue, 10);
-    const expirationDate = new Date();
-    expirationDate.setDate(expirationDate.getDate() + expirationDays);
-    const expirationDateString = expirationDate.toISOString();
+    // const expirationDays = parseInt(daysValue, 10);
+    // const expirationDate = new Date();
+    // expirationDate.setDate(expirationDate.getDate() + expirationDays);
+    // const expirationDateString = expirationDate.toISOString();
 
-    // Prompt for additional tags
-    const { value: tags } = await ElMessageBox.prompt(
-      "Enter additional tags (comma separated):",
-      "Additional Tags",
-      {
-        confirmButtonText: "Promote",
-        cancelButtonText: "Cancel",
-        inputPlaceholder: "e.g., Tag1, Tag2, Tag3",
-      }
-    );
+    // // Prompt for additional tags
+    // const { value: tags } = await ElMessageBox.prompt(
+    //   "Enter additional tags (comma separated):",
+    //   "Additional Tags",
+    //   {
+    //     confirmButtonText: "Promote",
+    //     cancelButtonText: "Cancel",
+    //     inputPlaceholder: "e.g., Tag1, Tag2, Tag3",
+    //   }
+    // );
 
     console.log(props.postId);
 
     const labelRequestBody: BodyT = {
       postId: props.postId,
       label: "promoted",
-      expiration: expirationDateString,
+      // expiration: expirationDateString,
     };
 
     // Promote the post by adding the "promoted" label with an expiration date
@@ -59,37 +59,37 @@ const promotePost = async () => {
 
 
     // Add additional tags individually as labels
-    if (tags.trim() !== "") {
-      const tagList = tags.split(",").map((tag) => tag.trim());
-      console.log(tagList);
-      for (const tag of tagList) {
-        if (tag) {
-          await fetchy(`/api/label`, "POST", {
-            body: {
-              postId: props.postId,
-              label: tag,
-            },
-          });
-        }
-      }
-    }
+//     if (tags.trim() !== "") {
+//       const tagList = tags.split(",").map((tag) => tag.trim());
+//       console.log(tagList);
+//       for (const tag of tagList) {
+//         if (tag) {
+//           await fetchy(`/api/label`, "POST", {
+//             body: {
+//               postId: props.postId,
+//               label: tag,
+//             },
+//           });
+//         }
+//       }
+//     }
 
-    ElMessage({
-      message: "Post promoted successfully!",
-      type: "success",
-    });
-  } catch (error) {
-    if (error !== "cancel") {
-      console.error("Error promoting post:", error);
-      ElMessage({
-        message: "Failed to promote post. Please try again.",
-        type: "error",
-      });
-    }
-  } finally {
-    promoting.value = false;
-  }
-};
+//     ElMessage({
+//       message: "Post promoted successfully!",
+//       type: "success",
+//     });
+//   } catch (error) {
+//     if (error !== "cancel") {
+//       console.error("Error promoting post:", error);
+//       ElMessage({
+//         message: "Failed to promote post. Please try again.",
+//         type: "error",
+//       });
+//     }
+//   } finally {
+//     promoting.value = false;
+//   }
+// };
 </script>
 
 <template>

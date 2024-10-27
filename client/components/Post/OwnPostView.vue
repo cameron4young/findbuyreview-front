@@ -36,7 +36,7 @@
         <button class="btn-small pure-button" @click="isEditing = true">Edit</button>
         <button class="button-error btn-small pure-button" @click="deletePost">Delete</button>
         <!-- Promotion Button -->
-        <PromotionButton :postId="post._id" />
+        <!-- <PromotionButton :postId="post._id" /> -->
       </div>
   
       <!-- Edit Modal -->
@@ -75,8 +75,7 @@
 </template>
   
 <script setup lang="ts">
-  import PromotionButton from '@/components/Labeling/PromoteButton.vue';
-import AddToCollectionButton from '@/components/Saving/AddToCollectionButton.vue';
+  import AddToCollectionButton from '@/components/Saving/AddToCollectionButton.vue';
 import { fetchy } from '@/utils/fetchy';
 import { computed, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';

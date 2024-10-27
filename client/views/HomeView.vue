@@ -188,7 +188,7 @@ onMounted(async () => {
 
 <template>
   <main>
-    <h1>General Feed</h1>
+    <br>
     <section v-if="isLoggedIn">
       <div v-if="loadingInterests">Loading interests...</div>
       <div v-else-if="error">{{ error }}</div>

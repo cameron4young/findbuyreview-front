@@ -26,7 +26,7 @@ onBeforeMount(async () => {
   <header>
     <nav>
       <div class="title">
-        <img src="@/assets/images/logo.svg" />
+        <img src="@/assets/images/binoculars.png" />
         <RouterLink :to="{ name: 'Home' }">
           <h1>FindBuyReview</h1>
         </RouterLink>
@@ -67,7 +67,7 @@ onBeforeMount(async () => {
 
 nav {
   padding: 1em 2em;
-  background-color: lightgray;
+  background-color: #69988d;
   display: flex;
   align-items: center;
 }
