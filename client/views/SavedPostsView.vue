@@ -17,6 +17,8 @@ interface Post {
 const collections = ref<{ _id: string; name: string }[]>([]);
 const selectedCollection = ref<string | null>(null);
 const posts = ref<Post[]>([]);
+const newCollectionName = ref<string>("");
+const showModal = ref(false); // Controls the visibility of the modal
 
 const fetchCollections = async () => {
   try {
@@ -49,19 +51,37 @@ const selectCollection = (collectionId: string | null) => {
 };
 
 const removePostFromCollection = async (postId: string) => {
-    if (selectedCollection.value){
-      try {
+  if (selectedCollection.value) {
+    try {
       const response = await fetchy(`/api/save/${encodeURIComponent(selectedCollection.value)}/${encodeURIComponent(postId)}`, "DELETE");
 
-    if (response.msg === "Post successfully removed from collection!") {
-      posts.value = posts.value.filter((post) => post._id !== postId);
-    } else {
-      console.error("Error removing post:", response.msg);
-    }
+      if (response.msg === "Post successfully removed from collection!") {
+        posts.value = posts.value.filter((post) => post._id !== postId);
+      } else {
+        console.error("Error removing post:", response.msg);
+      }
     } catch (error) {
       console.error("Error removing post from collection:", error);
     }
+  }
+};
+
+const addCollection = async () => {
+  const trimmedName = newCollectionName.value.trim();
+  if (trimmedName) {
+    try {
+      const response = await fetchy("/api/collection", "POST", {
+        body: { collectionName: trimmedName },
+      });
+      if (response.collection) {
+        collections.value.push(response.collection); // Add new collection to list
+        newCollectionName.value = ""; // Reset input field
+        showModal.value = false; // Close the modal
+      }
+    } catch (error) {
+      console.error("Error adding collection:", error);
     }
+  }
 };
 
 onMounted(async () => {
@@ -81,7 +101,26 @@ onMounted(async () => {
       >
         {{ collection.name }}
       </button>
+      <button class="add-collection-button" @click="showModal = true">+ Add Collection</button>
     </section>
+
+    <!-- Modal for adding a new collection -->
+    <div v-if="showModal" class="modal-overlay">
+      <div class="modal-content">
+        <h2>Add New Collection</h2>
+        <input
+          type="text"
+          v-model="newCollectionName"
+          placeholder="Enter collection name"
+          class="modal-input"
+        />
+        <div class="modal-actions">
+          <button @click="addCollection" class="modal-button">Add</button>
+          <button @click="showModal = false" class="modal-button cancel">Cancel</button>
+        </div>
+      </div>
+    </div>
+
     <PostGrid 
       v-if="selectedCollection && posts.length > 0" 
       :posts="posts" 
@@ -106,6 +145,7 @@ h1 {
   padding: 1em 0;
   margin-bottom: 1em;
   justify-content: center;
+  align-items: center;
 }
 
 .collection-selector button {
@@ -126,5 +166,79 @@ h1 {
 .collection-selector button:hover {
   background-color: #517a6b;
   color: white;
+}
+
+.add-collection-button {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 0.5em 1em;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1em;
+}
+
+.add-collection-button:hover {
+  background-color: #45a049;
+}
+
+/* Modal styling */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: #f5f5f5;
+  padding: 2em;
+  border-radius: 8px;
+  width: 400px;
+  max-width: 90%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.modal-input {
+  width: 100%;
+  padding: 0.5em;
+  margin-top: 1em;
+  margin-bottom: 1em;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+}
+
+.modal-button {
+  padding: 0.5em 1em;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1em;
+}
+
+.modal-button:hover {
+  background-color: #69988d;
+  color: white;
+}
+
+.modal-button.cancel {
+  background-color: #e74c3c;
+  color: white;
+}
+
+.modal-button.cancel:hover {
+  background-color: #c0392b;
 }
 </style>
