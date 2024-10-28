@@ -3,7 +3,7 @@
     <input
       type="text"
       v-model="recipientUsername"
-      placeholder="Enter username to start conversation"
+      placeholder="Enter username"
     />
     <button @click="startConversation">Start Conversation</button>
   </div>
@@ -20,9 +20,8 @@ const startConversation = async () => {
   if (!recipientUsername.value.trim()) return;
 
   try {
-    const userResponse = await fetchy(`/api/users/${recipientUsername.value}`, 'GET');
-    const userData = userResponse.user;
-
+    const userData = await fetchy(`/api/users/${recipientUsername.value}`, 'GET');
+    
     if (!userData) {
       console.error('User not found');
       return;
@@ -43,5 +42,6 @@ const startConversation = async () => {
 <style scoped>
 .conversation-selector {
   padding: 1em;
+  background-color: #e7eaee;
 }
 </style>

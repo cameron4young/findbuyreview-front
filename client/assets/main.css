@@ -13,6 +13,20 @@ header{
   --base-bg: #f1f3f5;
 }
 
+.loading-text {
+  position: relative;
+  left: 10vw;
+  bottom: 10vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%; 
+  font-size: 3EM; 
+  font-weight: bold; 
+  color: #555;
+}
+
+
 button.btn-small {
   font-size: 80%;
 }

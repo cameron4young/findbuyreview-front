@@ -1,5 +1,8 @@
 <template>
   <div class="conversation-content" v-if="conversationId">
+    <div v-if="recipientName" class="recipient-name">
+      <h2>Chat with {{ recipientName }}</h2>
+    </div>
     <div ref="messageListContainer" class="message-list-container">
       <MessageList :conversationId="conversationId" :reload="reloadMessages" />
       <!-- Use a marker at the end of the message list to scroll to -->
@@ -8,7 +11,7 @@
     <MessageInput @send="sendMessage" @sendOffer="sendOfferMessage" />
   </div>
   <div v-else class="no-conversation">
-    <p>Select a conversation to start chatting!</p>
+    <p class="loading-text">Select a conversation to start chatting!</p>
   </div>
 </template>
 
@@ -23,6 +26,9 @@ const reloadMessages = ref(false);
 const messageListContainer = ref<HTMLElement | null>(null);
 const scrollAnchor = ref<HTMLElement | null>(null);
 
+const recipientId = ref<string | null>(null);
+const recipientName = ref<string | null>(null); // New reactive variable for recipient's name
+
 type SendOfferMessageBody = {
   conversationId: string;
   recipientId: string;
@@ -33,8 +39,6 @@ type SendOfferMessageBody = {
   response?: string;
 };
 
-const recipientId = ref<string | null>(null);
-
 // Scroll to the bottom using the scrollAnchor
 const scrollToBottom = async () => {
   await nextTick();
@@ -43,6 +47,7 @@ const scrollToBottom = async () => {
   }
 };
 
+// Fetch recipient ID and name
 const getRecipientId = async () => {
   if (!props.conversationId) return;
 
@@ -54,8 +59,23 @@ const getRecipientId = async () => {
     const currentUserId = currentUserResponse._id;
 
     recipientId.value = conversation.participants.find((id: string) => id !== currentUserId);
+    if (recipientId.value) {
+      await getRecipientName(recipientId.value); 
+    }
   } catch (error) {
     console.error('Error fetching recipient ID:', error);
+  }
+};
+
+// Fetch recipient name by ID
+const getRecipientName = async (id: string) => {
+  try {
+    const userResponse = await fetchy(`/api/users/id/${id}`, 'GET');
+    console.log(userResponse);
+    recipientName.value = userResponse.username; // Assume response has a name field
+
+  } catch (error) {
+    console.error('Error fetching recipient name:', error);
   }
 };
 
@@ -71,7 +91,7 @@ const sendMessage = async (content: string) => {
       },
     });
     reloadMessages.value = !reloadMessages.value;
-    await scrollToBottom();  // Scroll after sending
+    await scrollToBottom();
   } catch (error) {
     console.error('Error sending message:', error);
   }
@@ -92,7 +112,7 @@ const sendOfferMessage = async (content: string, company: string, product: strin
   try {
     const response = await fetchy(`/api/conversations/offers`, 'POST', { body });
     reloadMessages.value = !reloadMessages.value;
-    await scrollToBottom();  // Scroll after sending offer message
+    await scrollToBottom();
   } catch (error) {
     console.error('Error sending offer message:', error);
   }
@@ -123,8 +143,16 @@ watch(
 .conversation-content {
   display: flex;
   flex-direction: column;
-  width: 75vw;
+  width: 80vw;
   height: 80vh;
+}
+
+.recipient-name {
+  padding: 1em;
+  text-align: center;
+  font-weight: bold;
+  background-color: #d9e2ee;
+  border-bottom: 1px solid #ddd;
 }
 
 .message-list-container {
