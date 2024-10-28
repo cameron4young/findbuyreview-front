@@ -88,26 +88,26 @@ const fetchPreferences = async () => {
 
     if (response.ok) {
       const data = await response.json();
-      if (data.preferences!==null){
+      if (data.preferences) {
         age.value = data.preferences.age || null;
         location.value = data.preferences.location || '';
         lookingFor.value = data.preferences.lookingFor || '';
         userInterests.value = data.preferences.interests || [];
         favoriteCompanies.value = data.preferences.favoriteCompanies || [];
         doNotShowList.value = data.preferences.doNotShow || [];
-      }
-      if (userInterests.value.length === 0) {
-        suggestedInterests.value = availableInterests;
       } else {
-        suggestedInterests.value = Array.from(new Set([...userInterests.value, ...availableInterests]));
+        suggestedInterests.value = availableInterests;
+        suggestedCompanies.value = availableCompanies;
       }
 
-      if (favoriteCompanies.value.length === 0) {
-        suggestedCompanies.value = availableCompanies;
-      } else {
-        suggestedCompanies.value = Array.from(new Set([...favoriteCompanies.value, ...availableCompanies]));
-      }
-      
+      suggestedInterests.value = userInterests.value.length === 0
+        ? availableInterests
+        : Array.from(new Set([...userInterests.value, ...availableInterests]));
+
+      suggestedCompanies.value = favoriteCompanies.value.length === 0
+        ? availableCompanies
+        : Array.from(new Set([...favoriteCompanies.value, ...availableCompanies]));
+
     } else {
       console.error('Failed to fetch preferences');
     }
@@ -117,6 +117,7 @@ const fetchPreferences = async () => {
     isLoading.value = false; 
   }
 };
+
 
 onMounted(async () => {
   if (isLoggedIn.value) {
@@ -307,7 +308,7 @@ p {
   max-width: 300px;
   margin: 2em auto 0;
   padding: 0.75em;
-  background-color: #69988D;
+  background-color: #94ac5a;
   color: white;
   border: none;
   border-radius: 4px;
@@ -318,6 +319,6 @@ p {
 }
 
 .btn-save:hover {
-  background-color: #517A6B;
+  background-color: #768a48;
 }
 </style>

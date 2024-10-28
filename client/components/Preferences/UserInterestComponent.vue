@@ -99,7 +99,7 @@ h2 {
 
 .btn-add {
   padding: 0.5em;
-  background-color: #69988D;
+  background-color: #94ac5a;
   color: white;
   border: none;
   border-radius: 4px;

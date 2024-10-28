@@ -127,8 +127,8 @@ onMounted(async () => {
       buttonLabel="Remove from Collection" 
       :buttonAction="removePostFromCollection" 
     />
-    <p v-else-if="selectedCollection && posts.length === 0">No posts found in this collection.</p>
-    <p v-else>Please select a collection to view posts.</p>
+    <p v-else-if="selectedCollection && posts.length === 0" class="saved">No posts found in this collection.</p>
+    <p v-else class="saved">Please select a collection to view posts.</p>
   </main>
 </template>
 
@@ -149,7 +149,7 @@ h1 {
 }
 
 .collection-selector button {
-  background-color: #c0c0c0;
+  background-color: #C8A37E;
   border: none;
   padding: 0.5em 1em;
   cursor: pointer;
@@ -159,17 +159,17 @@ h1 {
 }
 
 .collection-selector button.active {
-  background-color: #69988d;
+  background-color: #6a553f;
   color: white;
 }
 
 .collection-selector button:hover {
-  background-color: #517a6b;
+  background-color: #ab9379;
   color: white;
 }
 
 .add-collection-button {
-  background-color: #4CAF50;
+  /* background-color: #4CAF50; */
   color: white;
   border: none;
   padding: 0.5em 1em;
@@ -221,6 +221,7 @@ h1 {
 }
 
 .modal-button {
+  background-color: #94ac5a;
   padding: 0.5em 1em;
   border: none;
   border-radius: 4px;
@@ -229,7 +230,7 @@ h1 {
 }
 
 .modal-button:hover {
-  background-color: #69988d;
+  background-color: #b8cd87;
   color: white;
 }
 
@@ -241,4 +242,18 @@ h1 {
 .modal-button.cancel:hover {
   background-color: #c0392b;
 }
+
+.saved{
+  position: relative;
+  left: 1vw;
+  top: 10vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%; 
+  font-size: 2em; 
+  font-weight: bold; 
+  color: #555;
+}
 </style>
+

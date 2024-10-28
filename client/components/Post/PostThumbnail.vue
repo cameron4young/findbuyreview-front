@@ -103,7 +103,7 @@ const navigateToPost = () => {
 }
 
 .action-btn {
-  background-color: #949292;
+  background-color: #b9b6b6;
   color: white;
   border: none;
   border-radius: 4px;
@@ -113,6 +113,6 @@ const navigateToPost = () => {
 }
 
 .action-btn:hover {
-  background-color: #7a7a7a;
+  background-color: rgb(246, 3, 3);
 }
 </style>

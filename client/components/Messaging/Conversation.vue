@@ -151,7 +151,7 @@ watch(
   padding: 1em;
   text-align: center;
   font-weight: bold;
-  background-color: #d9e2ee;
+  background-color: #6a635e3c;
   border-bottom: 1px solid #ddd;
 }
 

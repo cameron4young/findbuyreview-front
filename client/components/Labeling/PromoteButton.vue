@@ -98,6 +98,7 @@ const closeModal = () => {
 .btn-small {
   padding: 0.3em 0.6em;
   font-size: 0.9em;
+  background-color: #94ac5a;
 }
 
 .modal-overlay {

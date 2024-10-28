@@ -67,7 +67,7 @@ onBeforeMount(async () => {
 
 nav {
   padding: 1em 2em;
-  background-color: #69988d;
+  background-color: #94ac5a;
   display: flex;
   align-items: center;
 }
@@ -75,6 +75,17 @@ nav {
 h1 {
   font-size: 2em;
   margin: 0;
+  letter-spacing: 0.1em;
+}
+
+ul li {
+  background-color: #cfe1e7; 
+  padding: 0.5em 1em;
+  border-radius: 4px; 
+}
+
+ul li:hover {
+  background-color: #c6effc; 
 }
 
 .title {

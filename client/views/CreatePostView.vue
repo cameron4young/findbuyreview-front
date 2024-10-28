@@ -20,7 +20,7 @@ const availableInterests = ref<string[]>([
   'Travel', 'Cooking', 'Politics', 'Books', 'Celebrities', 'Health & Wellness', 
   'Yoga', 'Meditation', 'Hiking', 'Biking', 'Photography', 'Cars', 'Luxury', 
   'Interior Design', 'DIY Projects', 'Gardening', 'Fishing', 'Camping', 'Surfing',
-  'Skiing', 'Snowboarding', 'Home Improvement', 'Business', 'Finance', 'Investing'
+  'Skiing', 'Home Improvement', 'Business', 'Finance', 'Investing'
 ]);
 
 const emit = defineEmits(["refreshPosts"]);
@@ -155,7 +155,7 @@ const toggleLabelSelection = (label: string) => {
 
 <style scoped>
 form {
-  background-color: var(--base-bg);
+  background-color: #dad4ce3c;
   border-radius: 1em;
   display: flex;
   flex-direction: column;
@@ -164,7 +164,7 @@ form {
 }
 
 button {
-  background-color: #69988D;
+  background-color: #94ac5a;
 }
 
 textarea,
@@ -176,53 +176,55 @@ input {
 }
 
 textarea {
-  height: 6em;
+  height: 2em;
   resize: none;
 }
 
 .form-section {
   display: flex;
   flex-direction: column;
-  gap: 0.5em;
+  gap: 0.25em;
 }
 
 .labels-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 1em;
-  margin: 1em 0;
+  gap: 0.5em; 
+  margin: 0.5em 0;
 }
 
 .label-item {
   display: flex;
   align-items: center;
+  gap: 0.2em; 
 }
 
 .custom-label {
   display: flex;
-  gap: 0.5em;
-  margin: 1em 0;
+  gap: 0.3em;
+  margin: 0.5em 0;
 }
 
 .custom-label input {
   flex: 1;
-  padding: 0.5em;
+  padding: 0.4em; 
 }
 
 .btn-add {
-  padding: 0.5em;
-  background-color: #69988D;
+  padding: 0.4em;
+  background-color: #94ac5a;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 0.9em;
+  font-size: 0.85em; 
 }
+
 
 .submit-button {
   padding: 0.75em;
   border-radius: 8px;
-  background-color: #69988d;
+  background-color: #94ac5a;
   color: white;
   font-size: 1em;
   cursor: pointer;
@@ -230,6 +232,6 @@ textarea {
 }
 
 .submit-button:hover {
-  background-color: #517a6b;
+  background-color: #7a8e4a;
 }
 </style>

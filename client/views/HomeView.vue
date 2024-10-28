@@ -190,7 +190,7 @@ onMounted(async () => {
   <main>
     <br>
     <section v-if="isLoggedIn">
-      <div v-if="loadingInterests">Loading interests...</div>
+      <div v-if="loadingInterests" class="loading">Loading interests...</div>
       <div v-else-if="error">{{ error }}</div>
       <div v-else>
         <!-- Search Input Field -->
@@ -226,14 +226,14 @@ onMounted(async () => {
           </button>
         </div>
 
-        <div v-if="loadingPosts">Loading posts...</div>
+        <div v-if="loadingPosts" class="loading">Loading posts...</div>
         <PostGrid
           v-else-if="posts.length > 0"
           :posts="posts"
           :buttonLabel="'Do Not Show'"
           :buttonAction="handleDoNotShowPost"
         />
-        <p v-else>No posts in this category!</p>
+        <p v-else class="loading" style="left:43vw">No posts in this category!</p>
       </div>
     </section>
     <section v-else>
@@ -272,7 +272,7 @@ h1 {
 }
 
 .interest-button {
-  background-color: #c0c0c0;
+  background-color: #C8A37E;
   border: none;
   padding: 0.5em 1em;
   cursor: pointer;
@@ -282,12 +282,19 @@ h1 {
 }
 
 .interest-button.active {
-  background-color: #69988d;
+  background-color: #6a553f;
   color: white;
 }
 
 .interest-button:hover {
-  background-color: #517a6b;
+  background-color: #ab9379;
   color: white;
+}
+
+.loading{
+  position:absolute;
+  font-size: large;
+  top: 50vh;
+  left: 45vw;
 }
 </style>

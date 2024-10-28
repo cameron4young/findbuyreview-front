@@ -104,14 +104,14 @@ onMounted(fetchCollections);
 .btn {
   padding: 0.5em 1em;
   border-radius: 4px;
-  background-color: #69988d;
+  background-color: #C8A37E;
   color: white;
   border: none;
   cursor: pointer;
 }
 
 .btn:hover {
-  background-color: #517a6b;
+  background-color: #937353;
 }
 
 .modal {

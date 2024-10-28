@@ -5,7 +5,7 @@
       <iframe
         :src="post.video"
         width="100%"
-        height="400"
+        height="300"
         title="Video player"
         frameborder="0"
         allowfullscreen
@@ -17,7 +17,6 @@
 
     <div class="interaction-buttons">
       <AddToCollectionButton :postId="post._id" />
-      <button class="btn pure-button">✉️ Send through Messages</button>
     </div>
 
     <div class="post-details">
@@ -193,14 +192,14 @@ const saveChanges = async () => {
 .btn {
   padding: 0.5em 1em;
   border-radius: 4px;
-  background-color: #69988D;
+  background-color: #9d9d9d;
   color: white;
   border: none;
   cursor: pointer;
 }
 
 .btn:hover {
-  background-color: #517A6B;
+  background-color: #677a3a;
 }
 
 .button-error {
