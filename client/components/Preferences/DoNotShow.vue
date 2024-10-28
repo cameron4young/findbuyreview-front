@@ -1,20 +1,22 @@
 <template>
   <div class="do-not-show-list">
     <h2>Do Not Show</h2>
+    <div class="add-item">
+      <input
+        type="text"
+        v-model="newItem"
+        placeholder="Add a category, company or post ID..."
+      />
+      <button @click="addItem">Add</button>
+    </div>
+    <br>
     <div class="list" v-if="localDoNotShow.length > 0">
       <div v-for="(item, index) in localDoNotShow" :key="index" class="list-item">
         <span>{{ item }}</span>
         <button @click="removeItem(index)">Remove</button>
       </div>
     </div>
-    <div class="add-item">
-      <input
-        type="text"
-        v-model="newItem"
-        placeholder="Add an item..."
-      />
-      <button @click="addItem">Add</button>
-    </div>
+    
   </div>
 </template>
 

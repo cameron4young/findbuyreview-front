@@ -2,7 +2,14 @@
   <div class="favorite-companies">
     <h2>Select Your Favorite Companies</h2>
     <form @submit.prevent>
-      <!-- Existing companies with checkboxes -->
+      <div class="custom-company">
+        <input
+          type="text"
+          v-model="newCompany"
+          placeholder="Add your own company..."
+        />
+        <button type="button" @click="addCustomCompany" class="btn-add">Add</button>
+      </div>
       <div v-for="company in companies" :key="company" class="company-item">
         <label>
           <input
@@ -12,16 +19,6 @@
           />
           {{ company }}
         </label>
-      </div>
-
-      <!-- Input to add a custom company -->
-      <div class="custom-company">
-        <input
-          type="text"
-          v-model="newCompany"
-          placeholder="Add your own company..."
-        />
-        <button type="button" @click="addCustomCompany" class="btn-add">Add</button>
       </div>
     </form>
   </div>

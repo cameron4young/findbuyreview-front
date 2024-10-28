@@ -90,9 +90,9 @@ const navigateToPost = () => {
 
 .post-title {
   font-weight: bold;
-  font-size: 1.1em;
+  font-size: 1.3em; /* Increased font size */
   text-align: center;
-  margin: 0.5em 0;
+  margin: 0.3em 0; /* Reduced margin around title */
 }
 
 .post-user,

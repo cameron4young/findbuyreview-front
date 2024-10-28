@@ -1,124 +1,147 @@
+<template>
+  <div>
+    <button class="btn-small pure-button" @click="isPromoting = true">Promote</button>
+
+    <!-- Promotion Modal -->
+    <div v-if="isPromoting" class="modal-overlay">
+      <div class="modal-content">
+        <h2>Promote Post</h2>
+        <form @submit.prevent="promotePost">
+          <!-- Promotion Duration -->
+          <div class="form-group">
+            <label for="duration">Promotion Duration (Days):</label>
+            <input
+              v-model.number="promotionForm.duration"
+              id="duration"
+              type="number"
+              min="1"
+              required
+            />
+          </div>
+
+          <!-- Additional Tags -->
+          <div class="form-group">
+            <label for="tags">Additional Tags (comma separated):</label>
+            <input
+              v-model="promotionForm.tags"
+              id="tags"
+              type="text"
+              placeholder="e.g., Tag1, Tag2, Tag3"
+            />
+          </div>
+
+          <div class="modal-actions">
+            <button type="submit" class="btn pure-button">Promote</button>
+            <button type="button" class="btn pure-button" @click="closeModal">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</template>
+
 <script setup lang="ts">
 import { BodyT, fetchy } from "@/utils/fetchy";
-// import { ElMessage, ElMessageBox } from "element-plus";
-import { defineProps, ref } from 'vue';
+import { ref } from "vue";
 
 const props = defineProps<{ postId: string }>();
 
-const promoting = ref(false);
+const isPromoting = ref(false);
 
-interface LabelRequestBody {
-  postId: string;
-  label: string;
-  expiration: string;
-}
+const promotionForm = ref({
+  duration: 1,
+  tags: "",
+});
 
+// Promote the post
 const promotePost = async () => {
-  promoting.value = true;
-  // try {
-    // Prompt for the number of days for promotion
-    // const { value: daysValue } = await ElMessageBox.prompt(
-    //   "Enter the number of days for promotion:",
-    //   "Promotion Duration",
-    //   {
-    //     confirmButtonText: "Next",
-    //     cancelButtonText: "Cancel",
-    //     inputPattern: /^\d+$/,
-    //     inputErrorMessage: "Please enter a valid number of days.",
-    //   }
-    // );
-
-    // const expirationDays = parseInt(daysValue, 10);
-    // const expirationDate = new Date();
-    // expirationDate.setDate(expirationDate.getDate() + expirationDays);
-    // const expirationDateString = expirationDate.toISOString();
-
-    // // Prompt for additional tags
-    // const { value: tags } = await ElMessageBox.prompt(
-    //   "Enter additional tags (comma separated):",
-    //   "Additional Tags",
-    //   {
-    //     confirmButtonText: "Promote",
-    //     cancelButtonText: "Cancel",
-    //     inputPlaceholder: "e.g., Tag1, Tag2, Tag3",
-    //   }
-    // );
-
-    console.log(props.postId);
+  try {
+    const expirationDate = new Date();
+    expirationDate.setDate(expirationDate.getDate() + promotionForm.value.duration);
+    const expirationDateString = expirationDate.toISOString();
 
     const labelRequestBody: BodyT = {
       postId: props.postId,
       label: "promoted",
-      // expiration: expirationDateString,
+      expiration: expirationDateString,
     };
 
-    // Promote the post by adding the "promoted" label with an expiration date
-    await fetchy(`/api/label`, "POST", {
-      body: labelRequestBody, // Pass the body as an object
-    });
+    // Send promotion request
+    await fetchy(`/api/label`, "POST", { body: labelRequestBody });
 
+    // Add additional tags if provided
+    if (promotionForm.value.tags.trim()) {
+      const tagList = promotionForm.value.tags.split(",").map((tag) => tag.trim());
+      for (const tag of tagList) {
+        await fetchy(`/api/label`, "POST", {
+          body: {
+            postId: props.postId,
+            label: tag,
+          },
+        });
+      }
+    }
 
-    // Add additional tags individually as labels
-//     if (tags.trim() !== "") {
-//       const tagList = tags.split(",").map((tag) => tag.trim());
-//       console.log(tagList);
-//       for (const tag of tagList) {
-//         if (tag) {
-//           await fetchy(`/api/label`, "POST", {
-//             body: {
-//               postId: props.postId,
-//               label: tag,
-//             },
-//           });
-//         }
-//       }
-//     }
+    closeModal();
+  } catch (error) {
+    console.error("Error promoting post:", error);
+  }
+};
 
-//     ElMessage({
-//       message: "Post promoted successfully!",
-//       type: "success",
-//     });
-//   } catch (error) {
-//     if (error !== "cancel") {
-//       console.error("Error promoting post:", error);
-//       ElMessage({
-//         message: "Failed to promote post. Please try again.",
-//         type: "error",
-//       });
-//     }
-//   } finally {
-//     promoting.value = false;
-//   }
-// };
+const closeModal = () => {
+  isPromoting.value = false;
+  promotionForm.value = { duration: 1, tags: "" }; // Reset form
 };
 </script>
 
-<template>
-  <button class="promote-button" :disabled="promoting" @click="promotePost">
-    Promote Post
-  </button>
-  <!-- If there's additional content from the second template, include it here -->
-</template>
-
 <style scoped>
-.promote-button {
-  background-color: #69988d;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 0.5em 1em;
-  cursor: pointer;
-  transition: background-color 0.3s;
+.btn-small {
+  padding: 0.3em 0.6em;
+  font-size: 0.9em;
 }
 
-.promote-button:hover {
-  background-color: #517a6b;
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
 }
 
-.promote-button:disabled {
-  background-color: #c0c0c0;
-  cursor: not-allowed;
+.modal-content {
+  background-color: #fff;
+  padding: 2em;
+  border-radius: 8px;
+  width: 400px;
+  max-width: 90%;
 }
 
-/* Include additional styles from the second style block here if needed */
+.modal-content h2 {
+  margin-top: 0;
+}
+
+.form-group {
+  margin-bottom: 1em;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5em;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.5em;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1em;
+}
 </style>

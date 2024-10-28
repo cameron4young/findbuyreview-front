@@ -1,3 +1,41 @@
+<template>
+  <main>
+    <h1>Edit Preferences</h1>
+    <p style="text-align: center;">
+      This data is used to recommend content to help you find better products! All questions are optional.
+    </p>
+    <button @click="handleSave" class="btn-save">Save Preferences</button>
+
+
+    <section v-if="!isLoading">
+    <div v-if="isLoggedIn" class="preferences-grid">
+      <div>
+        <AgeInput :value="age" @update:age="updateAge" />
+        <LocationInput :value="location" @update:location="updateLocation" />
+        <LookingFor :value="lookingFor" @update:lookingFor="updateLookingFor" />
+      </div>
+      <UserInterestComponent 
+        :value="userInterests" 
+        :suggestedInterests="suggestedInterests" 
+        @update:selectedInterests="updateUserInterests" 
+      />
+      <CompanyInterestComponent 
+        :initialCompanies="suggestedCompanies" 
+        :initialSelectedCompanies="favoriteCompanies" 
+        @update:selectedCompanies="updatefavoriteCompanies" 
+      />
+      <DoNotShow :value="doNotShowList" @update:doNotShow="updateDoNotShowList" />
+    </div>
+
+  <!-- v-else directly adjacent to the v-if above -->
+  <div v-else>
+    Must have an account to modify Preferences!
+  </div>
+  
+</section>
+  </main>
+</template>
+
 <script setup lang="ts">
 import AgeInput from "@/components/Preferences/AgeInput.vue";
 import CompanyInterestComponent from "@/components/Preferences/CompanyInterestComponent.vue";
@@ -18,7 +56,6 @@ const userInterests = ref<string[]>([]);
 const favoriteCompanies = ref<string[]>([]);
 const doNotShowList = ref<string[]>([]);
 
-// Static list of available companies and interests
 const availableCompanies = [
   'Nike', 'Adidas', 'Puma', 'Under Armour', 'H&M', 'Zara', 'Gucci', 'Louis Vuitton', 
   'Apple', 'Samsung', 'Coca-Cola', 'Pepsi', 'Starbucks', 'McDonald\'s', 'Subway', 
@@ -35,10 +72,8 @@ const availableInterests = [
   'Skiing', 'Snowboarding', 'Home Improvement', 'Business', 'Finance', 'Investing'
 ];
 
-// Loading state
 const isLoading = ref(true);
 
-// Suggested lists for interests and companies that combine user-selected options and suggestions
 const suggestedInterests = ref<string[]>([]);
 const suggestedCompanies = ref<string[]>([]);
 
@@ -79,11 +114,10 @@ const fetchPreferences = async () => {
   } catch (error) {
     console.error('Error fetching preferences:', error);
   } finally {
-    isLoading.value = false; // Set loading state to false after fetch is complete
+    isLoading.value = false; 
   }
 };
 
-// Call fetchPreferences when the component is mounted
 onMounted(async () => {
   if (isLoggedIn.value) {
     await fetchPreferences();
@@ -94,7 +128,6 @@ onMounted(async () => {
   }
 });
 
-// Event handlers to update state variables
 const updateAge = (value: number | null) => {
   age.value = value;
 };
@@ -161,7 +194,6 @@ const handleSave = async () => {
   }
 };
 
-// Function to save age
 const saveUserAge = async (newAge: number) => {
   const response = await fetch(`/api/preferences/age`, {
     method: 'PATCH',
@@ -247,42 +279,34 @@ const saveDoNotShowList = async (newDoNotShowList: string[]) => {
 };
 </script>
 
-<template>
-  <main>
-    <h1>Edit Preferences</h1>
-    <p style="text-align: center;">This data is used to recommend content to help you find better products! All questions are optional.</p>
-
-    <section v-if="!isLoading">
-      <div v-if="isLoggedIn">
-        <AgeInput :value="age" @update:age="updateAge" />
-        <LocationInput :value="location" @update:location="updateLocation" />
-        <LookingFor :value="lookingFor" @update:lookingFor="updateLookingFor" />
-        <UserInterestComponent :value="userInterests" :suggestedInterests="suggestedInterests" @update:selectedInterests="updateUserInterests" />
-        <CompanyInterestComponent 
-          :initialCompanies="suggestedCompanies" 
-          :initialSelectedCompanies="favoriteCompanies" 
-          @update:selectedCompanies="updatefavoriteCompanies" 
-        />
-        <DoNotShow :value="doNotShowList" @update:doNotShow="updateDoNotShowList" />
-        <button @click="handleSave" class="btn-save">Save Preferences</button>
-      </div>
-      <div v-else>
-        Must have an account to modify Preferences!
-      </div>
-    </section>
-  </main>
-</template>
-
 <style scoped>
 h1 {
   text-align: center;
+  margin-bottom: 0.5em;
+}
+
+p {
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto 1.5em;
+  color: #555;
+}
+
+.preferences-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4em;
+  padding: 1em;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .btn-save {
   display: block;
   width: 100%;
-  padding: 0.5em;
-  margin-top: 2em;
+  max-width: 300px;
+  margin: 2em auto 0;
+  padding: 0.75em;
   background-color: #69988D;
   color: white;
   border: none;
@@ -290,6 +314,7 @@ h1 {
   cursor: pointer;
   font-size: 1em;
   text-align: center;
+  transition: background-color 0.3s ease;
 }
 
 .btn-save:hover {

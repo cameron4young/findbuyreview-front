@@ -2,6 +2,8 @@
   <div class="conversation-content" v-if="conversationId">
     <div ref="messageListContainer" class="message-list-container">
       <MessageList :conversationId="conversationId" :reload="reloadMessages" />
+      <!-- Use a marker at the end of the message list to scroll to -->
+      <div ref="scrollAnchor"></div>
     </div>
     <MessageInput @send="sendMessage" @sendOffer="sendOfferMessage" />
   </div>
@@ -19,6 +21,7 @@ import MessageList from './MessageList.vue';
 const props = defineProps<{ conversationId: string | null }>();
 const reloadMessages = ref(false);
 const messageListContainer = ref<HTMLElement | null>(null);
+const scrollAnchor = ref<HTMLElement | null>(null);
 
 type SendOfferMessageBody = {
   conversationId: string;
@@ -32,10 +35,11 @@ type SendOfferMessageBody = {
 
 const recipientId = ref<string | null>(null);
 
-// Scroll to bottom function
-const scrollToBottom = () => {
-  if (messageListContainer.value) {
-    messageListContainer.value.scrollTop = messageListContainer.value.scrollHeight;
+// Scroll to the bottom using the scrollAnchor
+const scrollToBottom = async () => {
+  await nextTick();
+  if (scrollAnchor.value) {
+    scrollAnchor.value.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }
 };
 
@@ -67,6 +71,7 @@ const sendMessage = async (content: string) => {
       },
     });
     reloadMessages.value = !reloadMessages.value;
+    await scrollToBottom();  // Scroll after sending
   } catch (error) {
     console.error('Error sending message:', error);
   }
@@ -87,6 +92,7 @@ const sendOfferMessage = async (content: string, company: string, product: strin
   try {
     const response = await fetchy(`/api/conversations/offers`, 'POST', { body });
     reloadMessages.value = !reloadMessages.value;
+    await scrollToBottom();  // Scroll after sending offer message
   } catch (error) {
     console.error('Error sending offer message:', error);
   }
@@ -100,14 +106,16 @@ onMounted(() => {
 watch(
   () => reloadMessages.value,
   async () => {
-    await nextTick();
-    scrollToBottom();
+    await scrollToBottom();
   }
 );
 
 watch(
   () => props.conversationId,
-  getRecipientId
+  async () => {
+    getRecipientId();
+    await scrollToBottom();
+  }
 );
 </script>
 

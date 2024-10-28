@@ -3,6 +3,14 @@
     <h2>Select Your Interests</h2>
     <form @submit.prevent>
       <!-- Existing interests with checkboxes -->
+      <div class="custom-interest">
+        <input
+          type="text"
+          v-model="newInterest"
+          placeholder="Add your own interest..."
+        />
+        <button type="button" @click="addCustomInterest" class="btn-add">Add</button>
+      </div>
       <div v-for="interest in suggestedInterests" :key="interest" class="interest-item">
         <label>
           <input
@@ -15,14 +23,7 @@
       </div>
   
       <!-- Input to add a custom interest -->
-      <div class="custom-interest">
-        <input
-          type="text"
-          v-model="newInterest"
-          placeholder="Add your own interest..."
-        />
-        <button type="button" @click="addCustomInterest" class="btn-add">Add</button>
-      </div>
+      
     </form>
   </div>
 </template>

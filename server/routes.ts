@@ -499,7 +499,6 @@ class Routes {
     const senderId = Sessioning.getUser(session);
     const conversationObjectId = new ObjectId(conversationId);
     const messageObjectId = new ObjectId(messageId);
-
     const response = await Messages.denyOffer(conversationObjectId, messageObjectId, senderId);
     return { msg: response.msg };
   }

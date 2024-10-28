@@ -26,27 +26,36 @@ const props = defineProps({
 </script>
 
 <template>
-  <div class="post-grid">
-    <PostThumbnail
-      v-for="post in posts"
-      :key="post._id"
-      :title="post.content"
-      :user="post.author"
-      :rating="post.rating"
-      :videoUrl="post.video"
-      :id="post._id"
-      :buttonLabel="buttonLabel"
-      @doNotShow="() => buttonAction(post._id)"
-    />
+  <div class="center-container">
+    <div class="post-grid">
+      <PostThumbnail
+        v-for="post in posts"
+        :key="post._id"
+        :title="post.content"
+        :user="post.author"
+        :rating="post.rating"
+        :videoUrl="post.video"
+        :id="post._id"
+        :buttonLabel="buttonLabel"
+        @doNotShow="() => buttonAction(post._id)"
+      />
+    </div>
   </div>
 </template>
 
 <style scoped>
+.center-container {
+  display: flex;
+  justify-content: center;
+  padding: 1em;
+}
+
 .post-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5em;
-  padding: 1em;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4em;
+  max-width: 1300px;
+  width: 100%;
 }
 
 @media (max-width: 900px) {
