@@ -94,12 +94,12 @@ const toggleLabelSelection = (label: string) => {
       required
     ></textarea>
 
-    <label for="video">YouTube Video URL:</label>
+    <label for="video">Embed YouTube Video URL:</label>
     <input
       type="url"
       id="video"
       v-model="video"
-      placeholder="Enter a YouTube video URL"
+      placeholder="Enter an Embed YouTube video URL"
       required
     />
 
